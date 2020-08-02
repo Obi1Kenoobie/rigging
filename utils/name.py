@@ -1,19 +1,34 @@
 import copy
+import re
 
-from meRig.utils.globals import SIDES_LIST, NODES_SUFFIX
+from rigging.utils.globals import SIDES_LIST, NODES_SUFFIX
+
+
+namespace_RE = '(\S+:)?'
+side_RE = '([CLR][FMB]*[\d]*_)?'
+part_RE = '([A-Za-z][A-Za-z]+[a-z]+[0-9]*)?'
+part_index_RE = '([A-Z]+)?'
+index_RE = '(_\d+(?=_)|_END(?=_))?'
+tags_RE = '(_[a-z0-9]*[a-zA-Z0-9]*[a-z0-9_]+)*'
+suffix_RE = '([_A-Z]+[A-Z])*'
+
+RE_compile = re.compile(namespace_RE + side_RE + part_RE + part_index_RE + index_RE + tags_RE + suffix_RE)
+
+NAME_COMPONENTS_LIST = ['namespace', 'side', 'part', 'part_index', 'index', 'tags', 'suffix']
 
 
 class Name(object):
     """Name object used for the creation and query of names
     """
 
-    def __init__(self, name, side='', base_name='', base_index='', tags=[], index=None, suffix='', padding=2,
-                 last=False, node_type=None):
-
-        self._side = side
+    def __init__(self, name, namespace=None, side=None, part=None, part_index=None, tags=[], index=None, suffix=None,
+                 padding=2, last=False, node_type=None):
         self._name = name
-        self._base_name = base_name
-        self._base_index = base_index
+        self.name_RE = RE_compile.search(self._name)
+        self._namespace = namespace
+        self._side = side
+        self._part = part
+        self._part_index = part_index
         self._tags = tags
         self._index = index
         self._suffix = suffix
@@ -29,11 +44,12 @@ class Name(object):
 
         self._initialize_name()
 
-        self._name_dict = {'side': self._side,
-                           'base_name': self._base_name,
-                           'base_index': self._base_index,
-                           'tags': self._tags,
+        self._name_dict = {'namespace': self._namespace,
+                           'side': self._side,
+                           'part': self._part,
+                           'part_index': self._part_index,
                            'index': self._index,
+                           'tags': self._tags,
                            'suffix': self._suffix}
 
     @property
@@ -44,6 +60,15 @@ class Name(object):
     def name(self, value):
         if isinstance(value, basestring):
             self._name = value
+
+    @property
+    def namespace(self):
+        return self._name
+
+    @namespace.setter
+    def namespace(self, value):
+        if isinstance(value, basestring):
+            self._namespace = value
 
     @property
     def side(self):
@@ -58,26 +83,36 @@ class Name(object):
         self._name_dict['side'] = self._side
 
     @property
-    def base_name(self):
-        return self._base_name
+    def part(self):
+        return self._part
 
-    @base_name.setter
-    def base_name(self, value):
+    @part.setter
+    def part(self, value):
         if isinstance(value, basestring):
-            self._base_name = value
-        self._name_dict['base_name'] = self._base_name
+            self._part = value
+        self._name_dict['part'] = self._part
 
     @property
-    def base_index(self):
-        return self._base_index
+    def part_index(self):
+        return self._part_index
 
-    @base_index.setter
-    def base_index(self, value):
+    @part_index.setter
+    def part_index(self, value):
         if isinstance(value, basestring):
-            self._base_index = value.upper()
+            self._part_index = value.upper()
         elif isinstance(value, int):
-            self._base_index = self._generate_index(value)
-        self._name_dict['base_index'] = self._base_index
+            self._part_index = self._generate_index(value)
+        self._name_dict['part_index'] = self._part_index
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, value):
+        if isinstance(value, int):
+            self._index = self._generate_index(value)
+        self._name_dict['index'] = self._index
 
     @property
     def tags(self):
@@ -90,16 +125,6 @@ class Name(object):
         elif isinstance(value, (list,)):
             self._tags = value
         self._name_dict['tags'] = self._tags
-
-    @property
-    def index(self):
-        return self._index
-
-    @index.setter
-    def index(self, value):
-        if isinstance(value, int):
-            self._index = self._generate_index(value)
-        self._name_dict['index'] = self._index
 
     @property
     def suffix(self):
@@ -153,11 +178,11 @@ class Name(object):
         if dictionary['side']:
             name_list.append(dictionary['side'])
 
-        if dictionary['base_name']:
-            name_list.append(dictionary['base_name'])
+        if dictionary['part']:
+            name_list.append(dictionary['part'])
 
-        if dictionary['base_index']:
-            name_list.append(dictionary['base_index'])
+        if dictionary['part_index']:
+            name_list.append(dictionary['part_index'])
 
         if dictionary['index']:
             name_list.append(dictionary['index'])
@@ -167,20 +192,30 @@ class Name(object):
             name_list.append(tags_string)
 
         if dictionary['suffix']:
-            name_list.append(dictionary['suffix'])
+            if isinstance(dictionary['suffix'], list):
+                suffix_string = '_'.join(dictionary['suffix'])
+                name_list.append(suffix_string)
+            else:
+                name_list.append(dictionary['suffix'])
 
-        return name.join(name_list)
+        name = name.join(name_list)
+        
+        if dictionary['namespace']:
+            name = dictionary['namespace'] + ':' + name
 
-    def replace(self, side='', base_name='', base_index='', tags=[], index=None, suffix='TMP', add_to_tags=[],
-                add_to_suffix=''):
+        return name 
+
+    def replace(self, namespace=None, side=None, part=None, part_index=None, tags=[], index=None, suffix=[],
+                add_to_tags=None, add_to_suffix=None):
         replace_dict = copy.deepcopy(self._name_dict)
-
+        if namespace:
+            replace_dict['namespace'] = namespace
         if side:
             replace_dict['side'] = side
-        if base_name:
-            replace_dict['base_name'] = base_name
-        if base_index:
-            replace_dict['base_index'] = base_index
+        if part:
+            replace_dict['part'] = part
+        if part_index:
+            replace_dict['part_index'] = part_index
         if tags:
             if isinstance(tags, list):
                 replace_dict['tags'] = tags
@@ -189,111 +224,51 @@ class Name(object):
         if index:
             replace_dict['index'] = self._generate_index(index)
         if suffix:
-            replace_dict['suffix'] = suffix
+            replace_dict['suffix'] = [suffix]
         if add_to_tags:
             if isinstance(add_to_tags, list):
-                replace_dict['tags'].extend(add_to_tags)
+                if replace_dict['tags']:
+                    replace_dict['tags'].extend(add_to_tags)
+                else:
+                    replace_dict['tags'] = add_to_tags
             elif isinstance(add_to_tags, basestring):
                 replace_dict['tags'].append(add_to_tags)
         if add_to_suffix:
-            replace_dict['suffix'].append(add_to_suffix)
-
+            if isinstance(replace_dict['suffix'], list):
+                replace_dict['suffix'].append(add_to_suffix)
+            else:
+                list(replace_dict['suffix']).append(add_to_suffix)
         name = self.create(dictionary=replace_dict)
         return name
 
     def _initialize_name(self):
-        name_elements = self._name.split('_')
-        if len(name_elements) == 1:
-            if self._base_name == '':
-                self._base_name = name_elements[0]
-
-        elif len(name_elements) == 2:
-            if self._base_name == '':
-                self._base_name = name_elements[0]
-            if name_elements[0].isupper() and len(name_elements[0]) <= 3:
-                if self._side == '':
-                    self._side = name_elements[0]
-            if name_elements[1].isupper():
-                if self._suffix == '':
-                    self._suffix = name_elements[1]
-            if name_elements[1].isdigit():
-                if not self._index:
-                    self._index = name_elements[1]
-            else:
-                if self._base_name == '':
-                    self._base_name = name_elements[1]
-
-        elif len(name_elements) == 3:
-            if self._base_name == '':
-                self._base_name = name_elements[1]
-            if name_elements[0].isupper() and len(name_elements[0]) <= 3:
-                if self._side == '':
-                    self._side = name_elements[0]
-            if name_elements[2].isdigit():
-                if not self._index:
-                    self._index = name_elements[2]
-            if name_elements[2].isupper():
-                if self._suffix == '':
-
-                    self._suffix = name_elements[2]
-            else:
-                self._tags.extend([name_elements[2]])
-
-        elif len(name_elements) == 4:
-            if self._base_name == '':
-                self._base_name = name_elements[1]
-            if name_elements[0].isupper() and len(name_elements[0]) <= 3:
-                if self._side == '':
-                    self._side = name_elements[0]
-            if name_elements[2].isupper():
-                if self._base_index == '':
-                    self._base_index = name_elements[2]
-            if name_elements[2].isdigit():
-                if not self._index:
-                    self._index = name_elements[2]
-            if name_elements[3].isupper():
-                if self._suffix == '':
-                    self._suffix = name_elements[3]
-            else:
-                self._tags.extend([name_elements[2], name_elements[3]])
-
-        elif len(name_elements) == 5:
-            if self._base_name == '':
-                self._base_name = name_elements[1]
-            if name_elements[0].isupper() and len(name_elements[0]) <= 3:
-                if self._side == '':
-                    self._side = name_elements[0]
-            if name_elements[2].isupper() or name_elements[2].isdigit():
-                if self._base_index == '':
-                    self._base_index = name_elements[2]
-            if name_elements[3].isdigit():
-                if not self._index:
-                    self._index = name_elements[3]
-            if name_elements[4].isupper():
-                if self._suffix == '':
-                    self._suffix = name_elements[4]
-            else:
-                self._tags.extend([name_elements[2], name_elements[3], name_elements[4]])
-
-        elif len(name_elements) == 6:
-            if self._base_name == '':
-                self._base_name = name_elements[1]
-            self._tags.append(name_elements[3])
-            if name_elements[0].isupper() and len(name_elements[0]) <= 3:
-                if self._side == '':
-                    self._side = name_elements[0]
-            if name_elements[2].isupper() or name_elements[2].isdigit():
-                if self._base_index == '':
-                    self._base_index = name_elements[2]
-            if name_elements[4].isdigit():
-                if not self._index:
-                    self._index = name_elements[4]
-            if name_elements[5].isupper():
-                if self._suffix == '':
-                    self._suffix = name_elements[5]
-            else:
-                self._tags.extend([name_elements[2], name_elements[3], name_elements[4], name_elements[5]])
+        parsed_components = [component.strip('_') if component else component for component in self.name_RE.groups()]
+        parsed_dict = dict(zip(NAME_COMPONENTS_LIST, parsed_components))
+        if not self._namespace:
+            self._namespace = parsed_dict['namespace']
+        if not self.side:
+            self._side = parsed_dict['side']
+        if not self._part:
+            self._part = parsed_dict['part']
+        if not self._part_index:
+            self._part_index = parsed_dict['part_index']
+        if not self._index:
+            self._index = parsed_dict['index']
+        if not self._tags:
+            parsed_tags = parsed_dict['tags']
+            if parsed_tags and '_' in parsed_tags:
+                parsed_tags = filter(None, parsed_tags.split('_'))
+            self._tags = parsed_tags
+        if not self._suffix:
+            parsed_suffix = parsed_dict['suffix']
+            if parsed_suffix and '_' in parsed_suffix:
+                parsed_suffix = filter(None, parsed_suffix.split('_'))
+            self._suffix = parsed_suffix
 
     def _generate_index(self, index):
         if isinstance(index, int):
             return '{:0{}d}'.format(index, self._padding)
+
+
+def generate_name_list(name_object, num):
+    return [name_object.replace(index=i+1) for i in range(0, num)]

@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 
-from meRig.utils import globals
+from rigging.utils import globals
 
 
 def get_parent(dag_node, **kwargs):

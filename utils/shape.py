@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 
-from meRig.utils import name, data_io, common
+from rigging.utils import name, data_io, common
 
 
 def create(name, shape_type=None, shape_up='+y', shape_aim='+x', color=None, size=1.0, **kwargs):
