@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 
-from rigging.utils import globals
+from rigging.utils import globals, math
+from rigging.utils.name import Name
 
 
 def get_parent(dag_node, **kwargs):
@@ -37,3 +38,24 @@ def set_override_color(dag_node, color=None):
     if cmds.objectType(dag_node) in globals.OVERRIDE_TYPES:
         cmds.setAttr(dag_node + '.overrideEnabled', True)
         cmds.setAttr(dag_node + '.overrideColor', color)
+
+
+def create_node(node_type, name, matrix=None, parent=None):
+    node_name = Name(name, node_type=node_type).create()
+    node = cmds.createNode(node_type)
+    if 'Shape' in node:
+        node = get_parent(node)
+    node = cmds.rename(node, node_name)
+    if cmds.objectType(node, isType='transform'):
+        if parent:
+            cmds.parent(node, parent, relative=True)
+        if matrix:
+            math.set_matrix(node, matrix)
+    return node
+
+
+def zero(dag_node, translation=True, rotation=True):
+    if translation:
+        cmds.xform(dag_node, translation=[0.0, 0.0, 0.0])
+    elif rotation:
+        cmds.xform(dag_node, rotation=[0.0, 0.0, 0.0])

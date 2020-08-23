@@ -35,14 +35,15 @@ class Name(object):
         self._padding = padding
         self._last = last
         self._node_type = node_type
+        
+        self._initialize_name()
 
         if self._last:
             self._suffix = 'END'
 
-        if self._node_type in NODES_SUFFIX:
+        if self._node_type in NODES_SUFFIX and self._suffix == None:
             self._suffix = NODES_SUFFIX[self._node_type]
 
-        self._initialize_name()
 
         self._name_dict = {'namespace': self._namespace,
                            'side': self._side,
