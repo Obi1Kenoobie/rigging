@@ -22,3 +22,8 @@ def get_mobj(dag_node):
 def get_mplug(dag_node):
     msel_list = get_mselectionlist(dag_node)
     return msel_list.getPlug(0)
+
+
+def get_mfn_nurbsCurve(dag_node):
+    mobj = get_mobj(dag_node)
+    return om.MFnNurbsCurve(mobj)

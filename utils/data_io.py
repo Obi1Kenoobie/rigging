@@ -59,62 +59,55 @@ class Data(object):
         return unicode(repr(self.__dict__))
 
 
-def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None, file_type=None):
+def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None, file_type=None, force_export=False):
     if isinstance(data, Data):
         data = data.__dict__
     elif not isinstance(data, dict):
         cmds.error('Data must be either a dictionary or a Data() object')
 
-    root_name = 'MayaIO'
-    root_path = DEFAULT_PATH + '\\' + root_name
-    if not os.path.exists(root_path):
-        if mode == 'export':
-            os.mkdir(root_path)
-        else:
-            cmds.error('Root directory not found!')
+    path = file_path
+    if not path:
+        root_name = 'MayaIO'
+        root_path = DEFAULT_PATH + '//' + root_name
+        if not os.path.exists(root_path):
+            if mode == 'export':
+                os.mkdir(root_path)
+            else:
+                cmds.error('Root directory not found!')
 
-    folder_name = 'MiscIO'
-    if file_type == 'skinCluster':
-        folder_name = 'SkinIO'
-    elif file_type == 'controlShape':
-        folder_name = 'CtrlIO'
+        folder_name = 'MiscIO'
+        if file_type == 'skinCluster':
+            folder_name = 'SkinIO'
+        elif file_type == 'controlShape':
+            folder_name = 'CtrlIO'
 
-    if not asset_name:
-        asset_name = 'Default'
+        if not asset_name:
+            asset_name = 'Default'
 
-    folder_path = root_path + '\\' + folder_name + '\\' + asset_name
-    if not os.path.exists(folder_path):
-        if mode == 'export':
-            os.mkdir(folder_path)
-        else:
-            return cmds.error('directory not found!')
+        path = root_path + '//' + folder_name + '//' + asset_name
+        if not os.path.exists(path):
+            if mode == 'export':
+                os.mkdir(path)
+            else:
+                return cmds.error('directory not found!')
 
     if not file_name:
         file_name = 'tmp'
 
-    full_path = file_path
-    if not full_path:
-        full_path = folder_path + '\\' + file_name + '.json'
-
-    if os.path.exists(full_path):
-        status = cmds.confirmDialog(title='Confirm', message='Override exsisting file?', button=['Yes','No'],
-                                    defaultButton='Yes', cancelButton='No', dismissString='No')
-        if not status == 'Yes':
-            return None
+    full_path = path + '//' + file_name + '.json'
 
     if mode == 'export':
+        if os.path.exists(full_path) and force_export is False:
+            status = cmds.confirmDialog(title='Confirm', message='Override exsisting file?', button=['Yes', 'No'],
+                                        defaultButton='Yes', cancelButton='No', dismissString='No')
+            if not status == 'Yes':
+                return None
         with open(full_path, "w") as write_file:
-            try:
-                json.dump(data, write_file, indent=4, sort_keys=True)
-            except:
-                cmds.error('Not able to write data to file: {}'.format(full_path))
+            json.dump(data, write_file, indent=4, sort_keys=True)
 
         return 'Data exported successfully! path: {}'.format(full_path)
 
     elif mode == 'import':
         with open(full_path, "r") as read_file:
-            try:
-                data = json.load(data, read_file)
-                return data
-            except:
-                cmds.error('Not able to read data from file: {}'.format(full_path))
+            data = json.load(data, read_file)
+            return data
