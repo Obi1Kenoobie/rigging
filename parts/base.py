@@ -72,10 +72,22 @@ class Base(object):
             if parent:
                 parent_matrix = math.get_matrix(parent)
                 self.matrix = math.offset_matrix(parent_matrix, self.matrix)
-            math.set_offset_matrix(self.top, self.matrix)
+            math.set_offset_parent_matrix(self.top, self.matrix)
             common.zero(self.top)
         else:
             math.set_matrix(self.top, self.matrix)
+        
+        if keep_rotation:
+            if offset_matrix:
+                parent_offset_matrix = math.get_offset_parent_matrix(self.top)
+                rotation = math.rotation_from_matrix(parent_offset_matrix)
+                position_matrix = math.get_translation_matrix(math.translation_from_matrix(parent_offset_matrix))
+                cmds.xform(self.obj, ro=rotation)    
+                math.set_offset_parent_matrix(self.top, position_matrix)
+            else:
+                rotation = cmds.xform(self.top, q=True, ro=True)
+                cmds.xform(self.obj, ro=rotation)
+                common.zero(self.zero, translation=False)
         
     @staticmethod
     def _create_transform(obj_type, name):
@@ -114,7 +126,8 @@ class BaseChain(object):
                  suffix='SRT',
                  obj_type='transform',
                  offset_matrix=False,
-                 last=False):
+                 last=False,
+                 keep_rotation=False):
 
         self.namer = Name(name, suffix=suffix)
         self.name = self.namer.create()
@@ -152,7 +165,8 @@ class BaseChain(object):
                             suffix=suffix,
                             obj_type=obj_type,
                             offset_matrix=offset_matrix,
-                            last=is_last)
+                            last=is_last,
+                            keep_rotation=keep_rotation)
 
             self.zeros.append(base_obj.zero)
             self.spcs.append(base_obj.spc)

@@ -22,7 +22,12 @@ def set_matrix(dag_node, matrix, world=True):
         cmds.xform(dag_node, matrix=matrix, worldSpace=world)
 
 
-def set_offset_matrix(dag_node, matrix, world=True):
+def get_offset_parent_matrix(dag_node):
+    matrix_list = cmds.getAttr(dag_node + '.offsetParentMatrix')
+    return to_mmatrix(matrix_list)
+
+
+def set_offset_parent_matrix(dag_node, matrix, world=False):
     if world:
         matrix = offset_matrix(get_matrix(dag_node), matrix)
     matrix = matrix_to_list(matrix)
@@ -56,7 +61,7 @@ def to_mmatrix(matrix):
         return matrix.asMatrix()
     if isinstance(matrix, om.MMatrix):
         return matrix
-    if isinstance(matrix, list) and len(list) == 16:
+    if isinstance(matrix, list) and len(matrix) == 16:
         return om.MMatrix(matrix)
 
 
@@ -90,9 +95,7 @@ def matrix_components(matrix, rotation_order='xyz'):
     tmatrix = to_tmatrix(matrix)
     data.translation = to_mvector(tmatrix.translation(om.MSpace.kWorld))
 
-    euler = tmatrix.rotation()
-    euler.reorderIt(ROTATION_ORDER[rotation_order])
-    data.rotation = to_mvector([om.MAngle(r, om.MAngle.kRadians).asDegrees() for r in euler])
+    data.rotation = to_mvector(rotation_from_matrix(matrix, rotation_order=rotation_order))
 
     data.scale = to_mvector(tmatrix.scale(om.MSpace.kWorld))
 
@@ -101,7 +104,7 @@ def matrix_components(matrix, rotation_order='xyz'):
 
 def rotation_from_matrix(matrix, rotation_order='xyz'):
     tmatrix = to_tmatrix(matrix)
-    euler = om.MEulerRotation(tmatrix.rotation(), order=tmatrix.rotationOrder())
+    euler = tmatrix.rotation()
     euler.reorderIt(ROTATION_ORDER[rotation_order])
 
     return [om.MAngle(euler.x, om.MAngle.kRadians).asDegrees(),
@@ -116,8 +119,8 @@ def translation_from_matrix(matrix):
 def get_translation_matrix(translation):
     matrix = om.MMatrix()
     matrix[-4] = translation[0]
-    matrix[-3] = translation[0]
-    matrix[-2] = translation[0]
+    matrix[-3] = translation[1]
+    matrix[-2] = translation[2]
     return matrix
 
 

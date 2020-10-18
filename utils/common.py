@@ -55,7 +55,7 @@ def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=Fal
             cmds.parent(node, parent, relative=True)
         if matrix:
             if use_offset_matrix:
-                math.set_offset_matrix(node, matrix)
+                math.set_offset_parent_matrix(node, matrix)
             else:
                 math.set_matrix(node, matrix)
     return node
