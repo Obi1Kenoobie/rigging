@@ -2,7 +2,7 @@ import json
 import os
 import maya.cmds as cmds
 
-DEFAULT_PATH = 'C:/Users/{}/Documents/maya'.format(os.environ['USR'])
+DEFAULT_PATH = 'C://Users//{}//Documents//maya'.format(os.environ['USR'])
 
 
 class Data(object):
@@ -59,16 +59,17 @@ class Data(object):
         return unicode(repr(self.__dict__))
 
 
-def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None, file_type=None, force_export=False):
-    if isinstance(data, Data):
-        data = data.__dict__
-    elif not isinstance(data, dict):
-        cmds.error('Data must be either a dictionary or a Data() object')
+def data_io(data=None, mode='export', file_name=None, asset_name=None, file_path=None, file_type=None, force_export=False):
+    if mode == 'export':
+        if isinstance(data, Data):
+            data = data.__dict__
+        elif not isinstance(data, dict):
+            cmds.error('Data must be either a dictionary or a Data() object')
 
     path = file_path
     if not path:
         root_name = 'MayaIO'
-        root_path = DEFAULT_PATH + '//' + root_name
+        root_path = DEFAULT_PATH + "\\" + root_name
         if not os.path.exists(root_path):
             if mode == 'export':
                 os.mkdir(root_path)
@@ -84,7 +85,7 @@ def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None
         if not asset_name:
             asset_name = 'Default'
 
-        path = root_path + '//' + folder_name + '//' + asset_name
+        path = root_path + "\\" + folder_name + "\\" + asset_name
         if not os.path.exists(path):
             if mode == 'export':
                 os.mkdir(path)
@@ -94,7 +95,7 @@ def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None
     if not file_name:
         file_name = 'tmp'
 
-    full_path = path + '//' + file_name + '.json'
+    full_path = path + "\\" + file_name + '.json'
 
     if mode == 'export':
         if os.path.exists(full_path) and force_export is False:
@@ -109,5 +110,5 @@ def data_io(data, mode='export', file_name=None, asset_name=None, file_path=None
 
     elif mode == 'import':
         with open(full_path, "r") as read_file:
-            data = json.load(data, read_file)
+            data = json.load(read_file)
             return data

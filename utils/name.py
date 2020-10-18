@@ -8,7 +8,7 @@ namespace_RE = '(\S+:)?'
 side_RE = '([CLR][FMB]*[\d]*_)?'
 part_RE = '([A-Za-z][A-Za-z]+[a-z]+[0-9]*)?'
 part_index_RE = '([A-Z]+)?'
-index_RE = '(_\d+(?=_)|_END(?=_))?'
+index_RE = '(_\d+(?=_*)|_END(?=_))?'
 tags_RE = '(_[a-z0-9]*[a-zA-Z0-9]*[a-z0-9_]+)*'
 suffix_RE = '([_A-Z]+[A-Z])*'
 
@@ -21,8 +21,19 @@ class Name(object):
     """Name object used for the creation and query of names
     """
 
-    def __init__(self, name, namespace=None, side=None, part=None, part_index=None, tags=[], index=None, suffix=None,
-                 padding=2, last=False, node_type=None):
+    def __init__(self, 
+                 name, 
+                 namespace=None, 
+                 side=None, 
+                 part=None, 
+                 part_index=None, 
+                 tags=[], 
+                 index=None, 
+                 suffix=None,
+                 padding=2, 
+                 last=False, 
+                 node_type=None):
+
         self._name = name
         self.name_RE = RE_compile.search(self._name)
         self._namespace = namespace
@@ -200,13 +211,13 @@ class Name(object):
                 name_list.append(dictionary['suffix'])
 
         name = name.join(name_list)
-        
+
         if dictionary['namespace']:
             name = dictionary['namespace'] + ':' + name
 
         return name 
 
-    def replace(self, namespace=None, side=None, part=None, part_index=None, tags=[], index=None, suffix=[],
+    def replace(self, namespace=None, side=None, part=None, part_index=None, tags=[], index=None, suffix=None,
                 add_to_tags=None, add_to_suffix=None):
         replace_dict = copy.deepcopy(self._name_dict)
         if namespace:
@@ -225,7 +236,7 @@ class Name(object):
         if index:
             replace_dict['index'] = self._generate_index(index)
         if suffix:
-            replace_dict['suffix'] = [suffix]
+            replace_dict['suffix'] = suffix
         if add_to_tags:
             if isinstance(add_to_tags, list):
                 if replace_dict['tags']:
@@ -235,10 +246,11 @@ class Name(object):
             elif isinstance(add_to_tags, basestring):
                 replace_dict['tags'].append(add_to_tags)
         if add_to_suffix:
-            if isinstance(replace_dict['suffix'], list):
-                replace_dict['suffix'].append(add_to_suffix)
+            if isinstance(replace_dict['suffix'], basestring):
+                replace_dict['suffix'] = [replace_dict['suffix']]
+                replace_dict['suffix'].extend(add_to_suffix)
             else:
-                list(replace_dict['suffix']).append(add_to_suffix)
+                replace_dict['suffix'].extend(add_to_suffix)
         name = self.create(dictionary=replace_dict)
         return name
 
@@ -271,5 +283,11 @@ class Name(object):
             return '{:0{}d}'.format(index, self._padding)
 
 
-def generate_name_list(name_object, num):
-    return [name_object.replace(index=i+1) for i in range(0, num)]
+def generate_name_list(name_object, num, last=False):
+    name_list = []
+    for i in range(0, num):
+        if last and i == num-1:
+            name_list.append(name_object.replace(suffix='END'))
+        else:
+            name_list.append(name_object.replace(index=i + 1))
+    return name_list
