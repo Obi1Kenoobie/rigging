@@ -42,8 +42,9 @@ def create(name,
         color = globals.COLOR_SIDE_TO_STR[side]
 
     if not parent:
-        transform = cmds.createNode('transform', name=name)
-        parent = api.get_mobj(transform)
+        parent = cmds.createNode('transform', name=name)
+    
+    parent = api.get_mobj(parent)
 
     nurbsFn = om.MFnNurbsCurve()
     shape = nurbsFn.create(cvs, knots, degree, form, False, False, parent=parent)
@@ -58,6 +59,8 @@ def mirror(dag_node, force=False):
 
 
 def export_shape(dag_node, file_name=None, asset_name=None, file_path=None, world=False, force_export=False):
+    if not file_name:
+        file_name = dag_node
     data = get_shape_data(dag_node, world=world)
     data_io.data_io(data=data, mode='export', file_name=file_name, asset_name=asset_name, file_path=file_path, file_type='controlShape', force_export=force_export)
 
@@ -118,20 +121,23 @@ def get_shape_data(dag_node, world=False):
     data.name = dag_node
     data.side = Name(data.name).side
 
-    shapes_list = common.get_shapes(data.name)
-
+    shapes_list = common.get_shapes(dag_node)
     shapes_dict = data_io.Data()
-    for shp in shapes_list:
-        shape_dict = data_io.Data()
-        shape_dict.degree = get_shape_degree(shp)
-        shape_dict.spans = get_shape_spans(shp)
-        shape_dict.form = get_shape_form(shp)
-        shape_dict.knots = get_shape_knots(shp, as_list=True)
-        shape_dict.positions = get_cv_positions(shp, world=world, as_list=True)
-        shape_dict.color = common.get_override_color(shp)
+    if shapes_list:
+        for shp in shapes_list:
+            if is_nurbsCurve(shp):
+                shape_dict = data_io.Data()
+                shape_dict.degree = get_shape_degree(shp)
+                shape_dict.spans = get_shape_spans(shp)
+                shape_dict.form = get_shape_form(shp)
+                shape_dict.knots = get_shape_knots(shp, as_list=True)
+                shape_dict.positions = get_cv_positions(shp, world=world, as_list=True)
+                shape_dict.color = common.get_override_color(shp)
 
-        shapes_dict[shp] = shape_dict.__dict__
+                shapes_dict[shp] = shape_dict.__dict__
+            else:
+                continue
 
-    data.shapes = shapes_dict.__dict__
+        data.shapes = shapes_dict.__dict__
 
     return data

@@ -27,3 +27,8 @@ def get_mplug(dag_node):
 def get_mfn_nurbsCurve(dag_node):
     mobj = get_mobj(dag_node)
     return om.MFnNurbsCurve(mobj)
+
+
+def get_mfn_skinCluster(dag_node):
+    mobj = get_mobj(dag_node)
+    return oma.MFnSkinCluster(mobj)

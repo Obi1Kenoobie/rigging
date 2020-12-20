@@ -13,7 +13,7 @@ def add_switch(dag_node, attribute_name, keyable=False, lock=False):
     return add_attribute(dag_node, attribute_name, attr_type='bool', keyable=keyable, lock=lock)
 
 
-def add_blend_attribute(dag_node, attribute_name, min=0.0, max=1.0, default=1.0, keyable=True, lock=False):
+def add_blend_attribute(dag_node, attribute_name, min=0.0, max=1.0, default=0.0, keyable=True, lock=False):
     return add_attribute(dag_node, attribute_name, keyable=keyable, lock=lock, min=min, max=max, defaultValue=default)
 
 
@@ -44,4 +44,7 @@ def unlock_srt(dag_node, channels='srt', visibility=False):
             cmds.setAttr('{}.{}{}'.format(dag_node, channel, axis), lock=False, keyable=True)
     if visibility:
         cmds.setAttr('{}.visibility'.format(dag_node), lock=False, keyable=True)
-    
+
+
+def display_rotate_order(dag_node):
+    cmds.setAttr(dag_node + '.rotateOrder', channelBox=True, keyable=False)

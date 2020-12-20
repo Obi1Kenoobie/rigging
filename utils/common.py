@@ -40,11 +40,14 @@ def set_override_color(dag_node, color=None):
         cmds.setAttr(dag_node + '.overrideColor', color)
 
 
-def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=False, use_node_type=True):
-    node_name = name
-    print node_name
+def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=False, use_node_type=True, add_to_tags=None, suffix=None):
+    node_name = Name(name)
     if use_node_type:
-        node_name = Name(name, node_type=node_type).create()
+        node_name.node_type = node_type
+    if add_to_tags or suffix:
+        node_name = node_name.replace(add_to_tags=add_to_tags, suffix=suffix)
+    else:
+        node_name = node_name.create()
 
     node = cmds.createNode(node_type)
     if 'Shape' in node:

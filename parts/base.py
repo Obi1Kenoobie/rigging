@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 
 from rigging.utils import math, common
+from rigging.utils.space import add_space
 from rigging.utils.name import Name, generate_name_list
 
 
@@ -18,8 +19,11 @@ class Base(object):
                  obj_type='transform', 
                  offset_matrix=False,
                  last=False,
-                 keep_rotation=False):
-                    
+                 keep_rotation=False,
+                 space_drivers=None,
+                 space_names=None,
+                 split_channels=False):
+
         self.suffix = suffix
         if last:
             self.suffix = 'END'
@@ -38,7 +42,9 @@ class Base(object):
         self.base = self
         hierarchy_list = []
 
-            
+        if not spc and space_drivers:
+            spc = True
+
         if zero:
             self.zero = self.create_zero()
             hierarchy_list.append(self.zero)
@@ -88,7 +94,17 @@ class Base(object):
                 rotation = cmds.xform(self.top, q=True, ro=True)
                 cmds.xform(self.obj, ro=rotation)
                 common.zero(self.zero, translation=False)
-        
+
+        if space_drivers:
+            if not space_names:
+                space_names = space_drivers
+
+            add_space(self.spc,
+                      attr_obj=self.obj,
+                      space_drivers=space_drivers,
+                      space_names=space_names,
+                      split_channels=split_channels)
+
     @staticmethod
     def _create_transform(obj_type, name):
         return common.create_node(obj_type, name, use_node_type=False)
@@ -127,7 +143,10 @@ class BaseChain(object):
                  obj_type='transform',
                  offset_matrix=False,
                  last=False,
-                 keep_rotation=False):
+                 keep_rotation=False,
+                 space_drivers=None,
+                 space_names=None,
+                 split_channels=False):
 
         self.namer = Name(name, suffix=suffix)
         self.name = self.namer.create()
@@ -150,6 +169,9 @@ class BaseChain(object):
         obj_parent = self.parent
         is_last = False
         for i in range(len(self.matrices)):
+            if i != 0:
+                space_names = None
+                space_drivers = None
             if last and i == len(self.matrices)-1:
                 is_last = True
             obj_name = name_list[i]
@@ -166,7 +188,10 @@ class BaseChain(object):
                             obj_type=obj_type,
                             offset_matrix=offset_matrix,
                             last=is_last,
-                            keep_rotation=keep_rotation)
+                            keep_rotation=keep_rotation,
+                            space_drivers=space_drivers,
+                            space_names=space_names,
+                            split_channels=split_channels)
 
             self.zeros.append(base_obj.zero)
             self.spcs.append(base_obj.spc)

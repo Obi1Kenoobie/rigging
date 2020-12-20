@@ -200,8 +200,10 @@ class Name(object):
             name_list.append(dictionary['index'])
 
         if dictionary['tags']:
-            tags_string = '_'.join(dictionary['tags'])
-            name_list.append(tags_string)
+            tags_string = dictionary['tags']
+            if isinstance(dictionary['tags'], list):
+                tags_string = '_'.join(dictionary['tags'])
+            name_list.append(str(tags_string))
 
         if dictionary['suffix']:
             if isinstance(dictionary['suffix'], list):
@@ -244,7 +246,10 @@ class Name(object):
                 else:
                     replace_dict['tags'] = add_to_tags
             elif isinstance(add_to_tags, basestring):
-                replace_dict['tags'].append(add_to_tags)
+                if replace_dict['tags']:
+                    replace_dict['tags'].append(add_to_tags)
+                else:
+                    replace_dict['tags'] = add_to_tags
         if add_to_suffix:
             if isinstance(replace_dict['suffix'], basestring):
                 replace_dict['suffix'] = [replace_dict['suffix']]
@@ -271,7 +276,7 @@ class Name(object):
             parsed_tags = parsed_dict['tags']
             if parsed_tags and '_' in parsed_tags:
                 parsed_tags = filter(None, parsed_tags.split('_'))
-            self._tags = parsed_tags
+                self._tags = [parsed_tags]
         if not self._suffix:
             parsed_suffix = parsed_dict['suffix']
             if parsed_suffix and '_' in parsed_suffix:
