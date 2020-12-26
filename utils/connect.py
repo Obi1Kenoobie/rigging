@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-from rigging.utils import common, math, name
+from rigging.utils import common, math
 
 
 def connect(source, destination, attr='srt', axis='xyz'):

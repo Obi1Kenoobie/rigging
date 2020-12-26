@@ -2,7 +2,7 @@ import maya.cmds as cmds
 
 from rigging.utils import math, common
 from rigging.utils.space import add_space
-from rigging.utils.name import Name, generate_name_list
+from rigging.utils.name import Name, create_chain_names
 
 
 class Base(object):
@@ -15,6 +15,7 @@ class Base(object):
                  ofs=False, 
                  obj=True, 
                  mtx=False,
+                 mtx_type='transform',
                  suffix='SRT', 
                  obj_type='transform', 
                  offset_matrix=False,
@@ -29,7 +30,7 @@ class Base(object):
             self.suffix = 'END'
 
         self.namer = Name(name, suffix=self.suffix)
-        self.name = self.namer.create()
+        self.name = self.namer.create_name()
         self.side = self.namer.side
         self.matrix = matrix
         self.zero = None
@@ -37,6 +38,8 @@ class Base(object):
         self.ofs = None
         self.obj = None
         self.mtx = None
+        self.mtx_type = mtx_type
+        self.mtx_shape = None
         self.top = None
         self.bottom = None
         self.base = self
@@ -59,6 +62,9 @@ class Base(object):
             hierarchy_list.append(self.obj)
         if mtx:
             self.mtx = self.create_mtx()
+            if self.mtx_type == 'locator':
+                self.mtx_shape = common.get_shape(self.mtx)
+                cmds.setAttr(self.mtx_shape + '.visibility', False)
             hierarchy_list.append(self.mtx)
         
         self.top = hierarchy_list[0]
@@ -107,26 +113,22 @@ class Base(object):
 
     @staticmethod
     def _create_transform(obj_type, name):
-        return common.create_node(obj_type, name, use_node_type=False)
+        return common.create_node(obj_type, name)
 
     def create_zero(self):
-        zero_name = self.namer.replace(add_to_suffix=['ZERO'])
-        return self._create_transform('transform', zero_name)
+        return common.create_node('transform', self.name, suffix=self.suffix, add_to_suffix='ZERO')
     
     def create_spc(self):
-        spc_name = self.namer.replace(add_to_suffix=['SPC'])
-        return self._create_transform('transform', spc_name)
+        return common.create_node('transform', self.name, suffix=self.suffix, add_to_suffix='SPC')
 
     def create_ofs(self):
-        ofs_name = self.namer.replace(add_to_suffix=['OFS'])
-        return self._create_transform('transform', ofs_name)
+        return common.create_node('transform', self.name, suffix=self.suffix, add_to_suffix='OFS')
 
     def create_obj(self, obj_type):
-        return self._create_transform(obj_type, self.name)
+        return common.create_node(obj_type, self.name, suffix=self.suffix)
         
     def create_mtx(self):
-        mtx_name = self.namer.replace(add_to_suffix=['MTX'])
-        return self._create_transform('transform', mtx_name)
+        return common.create_node(self.mtx_type, self.name, suffix=self.suffix, add_to_suffix='MTX')
 
 
 class BaseChain(object):
@@ -139,6 +141,7 @@ class BaseChain(object):
                  ofs=False,
                  obj=True,
                  mtx=False,
+                 mtx_type='transform',
                  suffix='SRT',
                  obj_type='transform',
                  offset_matrix=False,
@@ -147,9 +150,9 @@ class BaseChain(object):
                  space_drivers=None,
                  space_names=None,
                  split_channels=False):
-
-        self.namer = Name(name, suffix=suffix)
-        self.name = self.namer.create()
+        self.suffix = suffix
+        self.namer = Name(name, suffix=self.suffix)
+        self.name = self.namer.create_name()
         self.side = self.namer.side
         self.matrices = matrices
         self.parent = parent
@@ -158,6 +161,7 @@ class BaseChain(object):
         self.ofsts = []
         self.objs = []
         self.mtxs = []
+        self.mtx_shapes = []
         self.top = None
         self.bottom = None
         self.tops = []
@@ -165,7 +169,7 @@ class BaseChain(object):
         self.bases = []
         self.base_cain = self
 
-        name_list = generate_name_list(self.namer, len(self.matrices), last=last)
+        name_list = create_chain_names(len(self.matrices), last_is_end=last, name=self.name)
         obj_parent = self.parent
         is_last = False
         for i in range(len(self.matrices)):
@@ -184,6 +188,7 @@ class BaseChain(object):
                             ofs=ofs,
                             obj=obj,
                             mtx=mtx,
+                            mtx_type=mtx_type,
                             suffix=suffix,
                             obj_type=obj_type,
                             offset_matrix=offset_matrix,
@@ -198,6 +203,8 @@ class BaseChain(object):
             self.ofsts.append(base_obj.ofs)
             self.objs.append(base_obj.obj)
             self.mtxs.append(base_obj.mtx)
+            if mtx_type == 'locator':
+                self.mtx_shapes.append(base_obj.mtx_shape)
             self.bases.append(base_obj.base)
             self.tops.append(base_obj.top)
             self.bottoms.append(base_obj.bottom)
@@ -206,20 +213,3 @@ class BaseChain(object):
 
         self.top = self.tops[0]
         self.bottom = self.bottoms[-1]
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            

@@ -1,6 +1,7 @@
 import maya.api.OpenMaya as om
 
 SIDES_LIST = ['C', 'L', 'R', 'CF', 'CB', 'LF', 'LB', 'RF', 'RB']
+SIDE_SWITCH = {'C': 'C', 'L': 'R', 'R': 'L'}
 
 NODES_SUFFIX = {'addDoubleLinear': 'ADL',
                 'addMatrix': 'ADDM',

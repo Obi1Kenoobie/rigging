@@ -1,7 +1,7 @@
 import maya.cmds as cmds
+import re
 
 from rigging.utils import globals, math
-from rigging.utils.name import Name
 
 
 def get_parent(dag_node, **kwargs):
@@ -40,15 +40,8 @@ def set_override_color(dag_node, color=None):
         cmds.setAttr(dag_node + '.overrideColor', color)
 
 
-def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=False, use_node_type=True, add_to_tags=None, suffix=None):
-    node_name = Name(name)
-    if use_node_type:
-        node_name.node_type = node_type
-    if add_to_tags or suffix:
-        node_name = node_name.replace(add_to_tags=add_to_tags, suffix=suffix)
-    else:
-        node_name = node_name.create()
-
+def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=False, add_to_suffix=None, add_to_tags=None, suffix=None):
+    node_name = _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix)
     node = cmds.createNode(node_type)
     if 'Shape' in node:
         node = get_parent(node)
@@ -62,6 +55,39 @@ def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=Fal
             else:
                 math.set_matrix(node, matrix)
     return node
+
+
+def _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix):
+    """returns name and shape-suffix as list
+
+    Args:
+        name (str): name of a node
+        add_to_tags (str|None): additional tags
+        suffix (str|None): suffix
+        node_type (str): node_type of node
+        add_to_suffix (str|None): additional suffix
+
+    Returns:
+       str: name
+    """
+    # split suffix from name
+    suffix_RE = re.compile('(_[_A-Z]+[A-Z])*')
+    found = suffix_RE.split(name)
+
+    if len(found) > 1:
+        name = found[0]
+    if add_to_tags:
+        if isinstance(add_to_tags, list):
+            add_to_tags = '_'.join(add_to_tags)
+        name += '_' + add_to_tags
+    if suffix:
+        name += '_' + suffix
+    else:
+        name += '_' + globals.NODES_SUFFIX[node_type]
+
+    if add_to_suffix:
+        name += '_' + add_to_suffix.upper()
+    return name
 
 
 def zero(dag_node, translation=True, rotation=True):

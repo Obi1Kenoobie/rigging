@@ -21,15 +21,25 @@ def add_header_attribute(dag_node, attribute_name):
     add_attribute(dag_node, attribute_name, attr_type='enum', keyable=False, lock=True, niceName='_', enumName='{}:'.format(attribute_name))
 
 
-def add_proxy_attribute(dag_nodes, attribtue_name, keyable=True, channel_box=True, lock=False, **kwargs):
-    pass
-    
-    
+def add_proxy_attribute(dag_nodes, attribute_name, attr_type='float', keyable=True, channel_box=True, lock=False, **kwargs):
+    attr = add_attribute(dag_nodes[0],
+                         attribute_name,
+                         attr_type=attr_type,
+                         keyable=keyable,
+                         channel_box=channel_box,
+                         lock=lock,
+                         **kwargs)
+    for dag_node in dag_nodes[1:]:
+        cmds.addAttr(dag_node, longName=attr, proxy=attr)
+
+    return attr
+
+
 def lock_srt(dag_node, translate='xyz', rotate='xyz', scale='xyz', hide=True, visibility=False):
-    attrs = {'t' : translate.lower(),
-             'r' : rotate.lower(),
-             's' : scale.lower()}
-             
+    attrs = {'t': translate.lower(),
+             'r': rotate.lower(),
+             's': scale.lower()}
+
     for key in attrs:
         for elem in attrs[key]:
             cmds.setAttr('{}.{}{}'.format(dag_node, key, elem), lock=True, keyable=not hide)

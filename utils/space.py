@@ -36,10 +36,9 @@ def add_space(dag_node, space_drivers=[], space_names=[], attr_obj=None, split_c
         cmds.connectAttr(decomp_nodes[0] + '.outputTranslate', dag_node + '.translate')
         cmds.connectAttr(decomp_nodes[0] + '.outputRotate', dag_node + '.rotate')
     
-    attribute.add_header_attribute(dag_node, 'SPACES')
+    attribute.add_header_attribute(attr_obj, 'SPACES')
     for i, space in enumerate(space_names):
-        space_transform = create_node('transform', space, parent=parent, matrix=matrix)
-        space_transform = cmds.rename(space_transform, dag_node + '_' + space + '_SPACE')
+        space_transform = create_node('transform', dag_node, parent=parent, matrix=matrix, add_to_tags=space, suffix='SPACE')
         connect.matrix_constraint(space_drivers[i], space_transform)
         if split_channels:
             t_attr = attribute.add_blend_attribute(attr_obj, space + '_translate')

@@ -99,6 +99,31 @@ def get_aim_matrix(position, aim_position, up_position, aim_axis='+x',
     return vectors_to_matrix(aim_vec, up_vec, tangent_vec, position)
 
 
+def get_axis_vector(matrix, axis):
+    """Get axis vector from matrix
+
+    Args:
+        matrix (om.MMatrix): Matrix to get the axis from
+        axis (str): Axis to get: '+x','+y','+z','-x','-y','-z'
+
+    Returns:
+        om.MVector: Return the axis vector
+    """
+    if 'x' in axis.lower():
+        vec = om.MVector(matrix[0], matrix[1], matrix[2])
+    elif 'y' in axis.lower():
+        vec = om.MVector(matrix[4], matrix[5], matrix[6])
+    elif 'z' in axis.lower():
+        vec = om.MVector(matrix[8], matrix[9], matrix[10])
+    else:
+        raise ValueError("Invalid axis specified '{0}'!".format(axis))
+
+    if axis.startswith('-'):
+        return -vec
+
+    return vec
+
+
 def _reorder_aim_axis(aim_vec, up_vec, tangent_vec, aim_axis, up_axis):
     """Reorder rows of a matrix to fit the aim_axis and up_axis criteria
 
@@ -137,6 +162,58 @@ def _reorder_aim_axis(aim_vec, up_vec, tangent_vec, aim_axis, up_axis):
                 aim_vec, up_vec, tangent_vec = -tangent_vec, up_vec, aim_vec
 
     return aim_vec, up_vec, tangent_vec
+
+
+def lerp(start, end, num=10):
+    """ For a list of floats linearly interpolated between two given ones.
+
+    Args:
+        start (float, int): start value.
+        end (float, int): end value.
+        num (int): number of samples.
+
+    Returns:
+        list[float]: list of values
+
+    """
+    return [i for i in lerp_generator(start, end, num=num)]
+
+
+def lerp_vectors(start_vec, end_vec, num=10):
+    """ Returns a list of interpolated vectors between the given ones.
+
+    Args:
+        start_vec (om.MVector): start vector.
+        end_vec (om.MVector): end vector
+        num (int): number of samples.
+
+    Returns:
+        list[om.MVector]: list of values
+    """
+    x_gen = lerp_generator(start_vec.x, end_vec.x, num=num)
+    y_gen = lerp_generator(start_vec.y, end_vec.y, num=num)
+    z_gen = lerp_generator(start_vec.z, end_vec.z, num=num)
+    return [om.MVector(x, y, z) for x, y, z in zip(x_gen, y_gen, z_gen)]
+
+
+def lerp_generator(start, end, num=10):
+    """  For a list of floats linearly interpolated between two given ones.
+
+    Args:
+        start (float, int): start value.
+        end (float, int): end value.
+        num (int): number of samples.
+
+    Returns:
+        generator: gnerator object holding the interpolations
+    """
+    step = (end - start) / (num - 1)
+    sample = start
+    i = 0
+    while i < num:
+        yield sample
+        sample += step
+        i += 1
 
 
 def matrix_to_list(matrix):
