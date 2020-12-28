@@ -3,7 +3,7 @@ import maya.cmds as cmds
 from rigging.utils import math, common
 from rigging.utils.common import create_node
 from rigging.utils.name import Name
-from rigging.utils.globals import AXIS_STR_TO_MVEC
+from rigging.utils.globals import AXIS_STR_TO_MVEC, AXIS_STR_TO_LONG
 
 
 def create_axis_nodes(transform, axes=[], position=True, local=False):
@@ -22,7 +22,7 @@ def create_axis_nodes(transform, axes=[], position=True, local=False):
     nodes = []
     if axes:
         for axis in axes:
-            point_mtx = common.create_node('pointMatrixMult', transform)
+            point_mtx = common.create_node('pointMatrixMult', transform, add_to_tags=AXIS_STR_TO_LONG[axis])
             cmds.connectAttr(transform + '.worldMatrix', point_mtx + '.inMatrix')
             cmds.setAttr(point_mtx + '.inPoint', *AXIS_STR_TO_MVEC[axis])
             cmds.setAttr(point_mtx + '.vectorMultiply', local)

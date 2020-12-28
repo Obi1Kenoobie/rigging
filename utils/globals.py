@@ -109,6 +109,7 @@ OVERRIDE_TYPES = ['transform', 'mesh', 'nurbsCurve', 'nurbsSurface']
 
 # axis vectors
 AXIS_STR = ['+x', '-x', '+y', '-y', '+z', '-z']
+AXIS_LONG = ['px', 'nx', 'py', 'ny', 'pz', 'nz']
 AXIS_NEG = {'+x': '-x', '+y': '-y', '+z': '-z', '-x': '+x', '-y': '+y', '-z': '+z'}
 AXIS_NORM = {'+x': '+y', '+y': '+z', '+z': '+x', '-x': '-y', '-y': '-z', '-z': '-x'}
 AXIS_VEC = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
@@ -116,3 +117,4 @@ AXIS_MVEC = [om.MVector(axis[0], axis[1], axis[2]) for axis in AXIS_VEC]
 
 AXIS_STR_TO_VEC = dict(zip(AXIS_STR, AXIS_VEC))
 AXIS_STR_TO_MVEC = dict(zip(AXIS_STR, AXIS_MVEC))
+AXIS_STR_TO_LONG = dict(zip(AXIS_STR, AXIS_LONG))
