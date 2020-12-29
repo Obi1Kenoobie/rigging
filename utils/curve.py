@@ -36,7 +36,7 @@ def create_knot_vector(cv_num, degree, periodic=False):
         return knots_array
 
 
-def create(name, points, degree=3, bezier=False, periodic=False, suffix='CRV'):
+def create(name, points, degree=3, bezier=False, periodic=False, add_to_tags=None, suffix='CRV'):
     """ Creates a curve with cvs at the given points.
 
     Args:
@@ -45,12 +45,13 @@ def create(name, points, degree=3, bezier=False, periodic=False, suffix='CRV'):
         degree (int): degree of the curve.
         bezier (bool): if True will create a bezier type curve.
         periodic (bool): if True will create a closed and periodic curve.
+        add_to_tags (list[str]|str): additional tags.
         suffix (str): custom suffix for the curve.
 
     Returns:
 
     """
-    namer = Name(name, suffix=suffix)
+    namer = Name(name, suffix=suffix, add_to_tags=add_to_tags)
 
     # periodic curves require the last points to be the same as the "degree" points
     if periodic:

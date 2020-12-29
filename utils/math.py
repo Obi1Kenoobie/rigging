@@ -207,7 +207,7 @@ def lerp_generator(start, end, num=10):
     Returns:
         generator: gnerator object holding the interpolations
     """
-    step = (end - start) / (num - 1)
+    step = (float(end) - float(start)) / (num - 1)
     sample = start
     i = 0
     while i < num:

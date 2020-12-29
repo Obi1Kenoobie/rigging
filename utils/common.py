@@ -5,7 +5,9 @@ from rigging.utils import globals, math
 
 
 def get_parent(dag_node, **kwargs):
-    return cmds.listRelatives(dag_node, parent=True, **kwargs)[0]
+    parent = cmds.listRelatives(dag_node, parent=True, **kwargs)
+    if parent:
+        return parent[0]
 
 
 def get_children(dag_node, **kwargs):

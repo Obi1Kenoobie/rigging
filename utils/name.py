@@ -1045,7 +1045,7 @@ def replace(name, **kwargs):
     return Name(name).replace(**kwargs)
 
 
-def create_chain_names(count, startindex=1, last_is_end=True, force_index=False, **kwargs):
+def create_chain_names(count, startindex=1, last_is_end=False, force_index=True, **kwargs):
     """creates a chain of names
 
     Args:

@@ -1,7 +1,9 @@
 import maya.cmds as cmds
 
 from rigging.utils import curve, transform, common, attribute
+from rigging.utils.math import lerp
 from rigging.utils.name import Name, create_chain_names
+from rigging.utils.globals import AXIS_STR_TO_MVEC, AXIS_STR_TO_ATTR
 
 
 class Spline(object):
@@ -9,14 +11,15 @@ class Spline(object):
 
         Args:
             name (str): base name.
-            drivers (list[str]):
-            attr_objs:
-            degree:
-            bezier:
-            aim_axis:
-            periodic:
-            suffix:
-            length_attr:
+            drivers (list[str]): list of transforms that will drive the curve.
+            attr_objs (list[str]): list of objects that will hold the tangents attributes len(drivers) == len(attr_obj)!
+            degree (int): curve degree.
+            bezier (bool): if False it will create a simple spline curve.
+            aim_axis (str): transforms aim axis (eg: +x)
+            periodic (bool): if True it will create a closed and periodic curve.
+            add_to_tags (list[str]|str): additional tags.
+            suffix (str): curve suffix.
+            length_attr (bool): if True will create a normalised length attribute on the attr_objs.
 
     """
     def __init__(self,
@@ -27,6 +30,7 @@ class Spline(object):
                  bezier=True,
                  aim_axis='+x',
                  periodic=False,
+                 add_to_tags=None,
                  suffix='CRV',
                  length_attr=False):
         self.namer = Name(name)
@@ -44,9 +48,10 @@ class Spline(object):
                                   degree=degree,
                                   bezier=bezier,
                                   periodic=periodic,
+                                  add_to_tags=add_to_tags,
                                   suffix=suffix)
         self.curve_shape = common.get_shape(self.curve)
-
+        self.default_length = curve.get_length(self.curve_shape)
         self._connect_drivers()
         if length_attr:
             self._add_length_attribute()
@@ -112,6 +117,96 @@ class Spline(object):
 
 
 class SplineSampler(Spline):
-    def __init__(self):
-        super(SplineSampler, self).__init__()
-        pass
+    def __init__(self,
+                 name,
+                 drivers=[],
+                 driven=None,
+                 attr_objs=None,
+                 sample_params=None,
+                 degree=3,
+                 bezier=True,
+                 aim_axis='+x',
+                 up_axis='+y',
+                 offset_matrix=True,
+                 twist=True,
+                 object_up=None,
+                 scale=True,
+                 periodic=False,
+                 add_to_tags=None,
+                 suffix='CRV',
+                 lock_stretch=True,
+                 length_attr=False
+                 ):
+        super(SplineSampler, self).__init__(name,
+                                            drivers=drivers,
+                                            attr_objs=attr_objs,
+                                            degree=degree,
+                                            bezier=bezier,
+                                            aim_axis=aim_axis,
+                                            periodic=periodic,
+                                            add_to_tags=add_to_tags,
+                                            suffix=suffix,
+                                            length_attr=length_attr)
+        self.driven = driven
+        self.up_axis = up_axis
+        self.object_up = object_up
+        self.offset_matrix = offset_matrix
+        self.sample_params = sample_params
+        if not self.sample_params:
+            self.sample_params = lerp(0.001, .99, num=len(driven))
+        self.sample_base_names = create_chain_names(len(self.sample_params), name=self.namer.name, add_to_tags='sample')
+        self.motion_paths, self.sample_matrices = self._create_samples()
+
+        if driven:
+            self._connect_driven()
+        if not twist:
+            self._connect_up_vector()
+
+    def _create_samples(self):
+        motion_paths = []
+        sample_matrices = []
+        for i, obj in enumerate(self.sample_params):
+            mpath = common.create_node('motionPath', self.sample_base_names[i], add_to_tags='percent')
+            cmds.setAttr(mpath + '.uValue', self.sample_params[i])
+            cmds.setAttr(mpath + '.fractionMode', True)
+            cmds.setAttr(mpath + '.worldUpVector', *AXIS_STR_TO_MVEC[self.up_axis])
+            cmds.setAttr(mpath + '.frontAxis', AXIS_STR_TO_ATTR[self.aim_axis])
+            cmds.setAttr(mpath + '.upAxis', AXIS_STR_TO_ATTR[self.up_axis])
+            cmds.setAttr(mpath + '.worldUpType', 3)
+            cmds.connectAttr(self.curve_shape + '.worldSpace[0]', mpath + '.geometryPath')
+            comp_mtx = common.create_node('composeMatrix', self.sample_base_names[i])
+            cmds.connectAttr(mpath + '.allCoordinates', comp_mtx + '.inputTranslate')
+            cmds.connectAttr(mpath + '.rotate', comp_mtx + '.inputRotate')
+            motion_paths.append(mpath)
+            sample_matrices.append(comp_mtx)
+        return motion_paths, sample_matrices
+
+    def _connect_driven(self):
+        for i, obj in enumerate(self.driven):
+            parent = common.get_parent(obj)
+            if parent:
+                mult_matrix = common.create_node('multMatrix', self.sample_matrices[i], add_to_tags='offset')
+                cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', mult_matrix + '.matrixIn[0]')
+                cmds.connectAttr(parent + '.worldInverseMatrix[0]', mult_matrix + '.matrixIn[1]')
+                if self.offset_matrix:
+                    cmds.connectAttr(mult_matrix + '.matrixSum', obj + '.offsetParentMatrix')
+                else:
+                    decomp = common.create_node('decomposeMatrix', obj)
+                    cmds.connectAttr(mult_matrix + '.matrixSum', decomp + '.inputMatrix')
+                    cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
+                    cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
+                    cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
+            else:
+                if self.offset_matrix:
+                    cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', obj + '.offsetParentMatrix')
+                else:
+                    decomp = common.create_node('decomposeMatrix', obj)
+                    cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', decomp + '.inputMatrix')
+                    cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
+                    cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
+                    cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
+
+    def _connect_up_vector(self):
+        up_node = transform.create_axis_nodes(self.object_up, axes=[self.up_axis], position=False, local=True)[0]
+        for mpath in self.motion_paths:
+            cmds.connectAttr(up_node + '.output', mpath + '.worldUpVector')
