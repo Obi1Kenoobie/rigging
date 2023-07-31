@@ -44,6 +44,8 @@ def set_override_color(dag_node, color=None):
 
 def create_node(node_type, name, matrix=None, parent=None, use_offset_matrix=False, add_to_suffix=None, add_to_tags=None, suffix=None):
     node_name = _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix)
+    if cmds.objExists(node_name):
+        return node_name
     node = cmds.createNode(node_type)
     if 'Shape' in node:
         node = get_parent(node)

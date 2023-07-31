@@ -11,6 +11,7 @@ NODES_SUFFIX = {'addDoubleLinear': 'ADL',
                 'blendTwoAttr': 'BLA',
                 'blendWeighted': 'BLW',
                 'blendMatrix' : 'BLM',
+                'aimMatrix' : 'AIMM',
                 'choice': 'CHC',
                 'clamp': 'CLMP',
                 'closestPointOnMesh': 'CPM',
@@ -112,6 +113,7 @@ AXIS_STR = ['+x', '-x', '+y', '-y', '+z', '-z']
 AXIS_LONG = ['px', 'nx', 'py', 'ny', 'pz', 'nz']
 AXIS_NEG = {'+x': '-x', '+y': '-y', '+z': '-z', '-x': '+x', '-y': '+y', '-z': '+z'}
 AXIS_NORM = {'+x': '+y', '+y': '+z', '+z': '+x', '-x': '-y', '-y': '-z', '-z': '-x'}
+AXIS_PREV = {'+x': '+z', '+y': '+x', '+z': '+y', '-x': '-z', '-y': '-x', '-z': '-y'}
 AXIS_VEC = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
 AXIS_ATTR = [0, 0, 1, 1, 2, 2]
 AXIS_MVEC = [om.MVector(axis[0], axis[1], axis[2]) for axis in AXIS_VEC]

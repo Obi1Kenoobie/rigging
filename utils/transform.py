@@ -1,7 +1,6 @@
 import maya.cmds as cmds
 
 from rigging.utils import math, common
-from rigging.utils.common import create_node
 from rigging.utils.name import Name
 from rigging.utils.globals import AXIS_STR_TO_MVEC, AXIS_STR_TO_LONG
 

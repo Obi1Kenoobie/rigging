@@ -54,8 +54,30 @@ def create(name,
     return shape_name
 
 
-def mirror(dag_node, force=False):
-    pass
+def mirror(dag_node, world=False):
+    namer = Name(dag_node)
+    side = namer.side
+    if not side:
+        return cmds.warning('object has not specific side.')
+    base_side = 'L_'
+    mirror_side = 'R_'
+    if 'R' in side:
+        base_side = 'R_'
+        mirror_side = 'L_'
+    shapes = common.get_shapes(dag_node)
+
+    # find mirror transform
+    mirror_obj = dag_node.replace(base_side, mirror_side)
+    if cmds.objExists(mirror_obj):
+        mirror_shapes = common.get_shapes(mirror_obj)
+        if not len(mirror_shapes) == len(shapes):
+            return cmds.warning('couldn\'t find equal number of shapes under mirror object.')
+        else:
+            for i, shape in enumerate(shapes):
+                mirror_positions = [om.MPoint(point.x*-1, point.y, point.z) for point in get_cv_positions(shape, world=world)]
+                set_cv_positions(mirror_shapes[i], mirror_positions, world=world)
+    else:
+        return cmds.warning('Couldn\'t find mirror object.')
 
 
 def export_shape(dag_node, file_name=None, asset_name=None, file_path=None, world=False, force_export=False):
@@ -93,14 +115,26 @@ def get_cv_num(curve_shape):
 
 
 def get_cv_positions(curve_shape, world=False, as_list=False):
-    space = 2
+    space = om.MSpace.kObject
     if world:
-        space = 4
+        space = om.MSpace.kWorld
     cvs_pos = api.get_mfn_nurbsCurve(curve_shape).cvPositions(space=space)
     if as_list:
         return [[pos[0], pos[1], pos[2]] for pos in cvs_pos]
     else:
         return cvs_pos
+
+
+def set_cv_positions(curve_shape, cv_positions, world=False):
+    space = om.MSpace.kObject
+    if world:
+        space = om.MSpace.kWorld
+    positions_marray = cv_positions
+    if isinstance(cv_positions, list):
+        positions_marray = om.MPointArray(cv_positions)
+    curve_fn = api.get_mfn_nurbsCurve(curve_shape)
+    curve_fn.setCVPositions(positions_marray, space=space)
+    curve_fn.updateCurve()
 
 
 def get_shape_form(curve_shape):

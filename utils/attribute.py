@@ -9,12 +9,16 @@ def add_attribute(dag_node, attribute_name, attr_type='float', keyable=True, cha
     return attribute_name
 
 
-def add_switch(dag_node, attribute_name, keyable=False, lock=False):
-    return add_attribute(dag_node, attribute_name, attr_type='bool', keyable=keyable, lock=lock)
+def add_switch(dag_node, attribute_name, keyable=False, lock=False, default=True):
+    return add_attribute(dag_node, attribute_name, attr_type='bool', keyable=keyable, lock=lock, defaultValue=default)
 
 
 def add_blend_attribute(dag_node, attribute_name, min=0.0, max=1.0, default=0.0, keyable=True, lock=False):
     return add_attribute(dag_node, attribute_name, keyable=keyable, lock=lock, min=min, max=max, defaultValue=default)
+
+
+def add_enum_attribute(dag_node, attribute_name, enum_names=[], keyable=True, lock=False):
+    add_attribute(dag_node, attribute_name, attr_type='enum', keyable=keyable, lock=lock, enumName=':'.join(enum_names))
 
 
 def add_header_attribute(dag_node, attribute_name):

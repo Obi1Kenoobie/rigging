@@ -309,3 +309,8 @@ def get_translation_matrix(translation):
 def get_rotation_matrix(rotation, rotation_order='xyz'):
     euler = to_eulerrotation(rotation, rotation_order=rotation_order)
     return euler.asMatrix()
+
+
+def get_position_vector(dag_node, world=True):
+    matrix = get_matrix(dag_node, world=world)
+    return translation_from_matrix(matrix)

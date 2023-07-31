@@ -178,7 +178,6 @@ def copy_skincluster(source, targets, smooth=True, method='closestPoint', add_mi
                 add_influences(target_skin, missing_influences)
 
         if method == 'uv':
-            # TODO: specify UV maps
             cmds.copySkinWeights(sourceSkin=source_skin,
                                  destinationSkin=target_skin,
                                  noMirror=True,
