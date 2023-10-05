@@ -163,9 +163,12 @@ class SplineSampler(Spline):
         self.object_up = object_up
         self.offset_matrix = offset_matrix
         self.sample_params = sample_params
-        if not self.sample_params:
+        if not self.sample_params and self.driven:
             self.sample_params = lerp(0.001, .999, num=len(driven))
         self.sample_base_names = create_chain_names(len(self.sample_params), name=self.namer.name, add_to_tags='sample')
+
+        self.build_spline()
+
         self.motion_paths, self.sample_matrices = self._create_samples()
 
         if driven:

@@ -94,7 +94,7 @@ class Name(object):
 
     def __init__(self, name=None, namespace=None, side=None, part=None, partindex=None,
                  index=None, tags=None, suffix=None, add_to_tags=None, add_to_suffix=None,
-                 pad=2, unique=False):
+                 pad=1, unique=False):
 
         # globals
         self._syntax_list = SYNTAX_LIST
@@ -760,7 +760,7 @@ def get_suffixlist(obj_list):
         except:
             pass
     for obj in suffix_set:
-        print obj
+        print( obj )
 
 
 def create_abc_dict(item_list):
@@ -1004,7 +1004,7 @@ def mirror_side_generator(amount=3):
 def string_to_list(value):
     """ filter tags input and return list """
     # value is single string
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         # create list if underscores are found in string
         value = [item for item in value.split('_') if item != '']
         return value
@@ -1019,7 +1019,7 @@ def string_to_list(value):
 def list_to_string(value):
     """ filter tags input and return list """
     # value is single string
-    if isinstance(value, basestring):
+    if isinstance(value, str):
         return value
     # value is list >> return list without None-values
     elif isinstance(value, list):

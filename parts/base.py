@@ -65,15 +65,17 @@ class Base(object):
             if self.mtx_type == 'locator':
                 self.mtx_shape = common.get_shape(self.mtx)
                 cmds.setAttr(self.mtx_shape + '.visibility', False)
-            hierarchy_list.append(self.mtx)
-        
+
         self.top = hierarchy_list[0]
         self.bottom = hierarchy_list[-1]
         
         # parenting stuff
         for i in range(1, len(hierarchy_list)):
             cmds.parent(hierarchy_list[i], hierarchy_list[i-1], absolute=True)
-        
+
+        if mtx:
+            cmds.parent(self.mtx, self.bottom, absolute=True)
+
         if parent:
             if obj_type == 'joint':
                 cmds.parent(self.top, parent, relative=True)

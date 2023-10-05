@@ -62,3 +62,7 @@ def unlock_srt(dag_node, channels='srt', visibility=False):
 
 def display_rotate_order(dag_node):
     cmds.setAttr(dag_node + '.rotateOrder', channelBox=True, keyable=False)
+
+
+def lock_hide_visibility(dag_node):
+    cmds.setAttr('{}.visibility'.format(dag_node), lock=True, keyable=False)

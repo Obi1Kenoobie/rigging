@@ -18,7 +18,7 @@ def create_knot_vector(cv_num, degree, periodic=False):
         list[int]: list containing knots values.
     """
     if cv_num <= degree:
-        print "warning, number of CVs can't be less than degree + 1"
+        print("warning, number of CVs can't be less than degree + 1")
         return None
     knots_num = cv_num + degree - 1
     if periodic:

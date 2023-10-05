@@ -1,6 +1,8 @@
 import maya.cmds as cmds
+
 from rigging.utils import common, math
-from rigging.utils.globals import AXIS_STR_TO_VEC, AXIS_PREV
+from rigging.utils.globals import AXIS_STR_TO_VEC, AXIS_PREV, NODES_SUFFIX
+from rigging.utils.name import Name
 
 
 def connect(source, destination, attr='srt', axis='xyz'):
@@ -86,3 +88,43 @@ def sdk(driver_attr, driver_values, driven_attr, driven_values, interpolation='l
                                    v=driven_values[i],
                                    itt=interpolation,
                                    ott=interpolation)
+
+
+def constraint(driver, driven, snap=False, skip_translate='', skip_rotate='', skip_scale='', type='parentConstraint'):
+    name = Name(driven, add_to_suffix=NODES_SUFFIX[type]).name
+    constraint_node = None
+    if type == 'parentConstraint':
+        constraint_node = cmds.parentConstraint(driver,
+                                               driven,
+                                               name=name,
+                                               maintainOffset=not snap,
+                                               skipTranslate=list(skip_translate),
+                                               skipRotate=list(skip_rotate))
+
+    if type == 'orientConstraint':
+        constraint_node = cmds.orientConstraint(driver,
+                                               driven,
+                                               name=name,
+                                               maintainOffset=not snap,
+                                               skip=list(skip_rotate))
+
+    if type == 'pointConstraint':
+        constraint_node = cmds.pointConstraint(driver,
+                                               driven,
+                                               name=name,
+                                               maintainOffset=not snap,
+                                               skip=list(skip_translate))
+
+    if type == 'scaleConstraint':
+        constraint_node = cmds.orientConstraint(driver,
+                                                driven,
+                                                name=name,
+                                                maintainOffset=not snap,
+                                                skip=list(skip_scale))
+
+    if type == 'poleVectorConstraint':
+        constraint_node = cmds.poleVectorConstraint(driver,
+                                                    driven,
+                                                    name=name)
+
+    return constraint_node

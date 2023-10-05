@@ -70,7 +70,12 @@ NODES_SUFFIX = {'addDoubleLinear': 'ADL',
                 'vectorProduct': 'VCP',
                 'wire': 'WIRE',
                 'wrap': 'WRAP',
-                'wtAddMatrix': 'WTAM'}
+                'wtAddMatrix': 'WTAM',
+                'parentConstraint' : 'CNS',
+                'pointConstraint' : 'PCNS',
+                'orientConstraint' : 'OCNS',
+                'scaleConstraint' : 'SCNS',
+                'poleVectorConstraint' : 'PVCNS'}
 # colors
 COLOR_STR = ['yellow',
              'light yellow',

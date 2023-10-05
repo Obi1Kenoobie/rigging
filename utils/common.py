@@ -34,7 +34,7 @@ def get_override_color(dag_node, asString=False):
 
 
 def set_override_color(dag_node, color=None):
-    if isinstance(color, basestring) and color in globals.COLOR_STR:
+    if isinstance(color, str) and color in globals.COLOR_STR:
         color = globals.COLOR_STR_TO_INDEX[color]
 
     if cmds.objectType(dag_node) in globals.OVERRIDE_TYPES:
@@ -75,9 +75,8 @@ def _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix):
        str: name
     """
     # split suffix from name
-    suffix_RE = re.compile('(_[_A-Z]+[A-Z])*')
+    suffix_RE = re.compile('(_[_A-Z]+[A-Z])')
     found = suffix_RE.split(name)
-
     if len(found) > 1:
         name = found[0]
     if add_to_tags:

@@ -91,7 +91,7 @@ def export_weights(dag_node, path):
     skin = get_skincluster(dag_node)
     weight_dict = get_weights_dict(skin)
     data_io.data_io(weight_dict, file_name=dag_node, file_path=path, force_export=True)
-    print 'Exported {0} skin weights to: {1}/{0}.json'.format(dag_node, path)
+    print('Exported {0} skin weights to: {1}/{0}.json'.format(dag_node, path))
 
 
 def import_weights(dag_node, path):
@@ -123,7 +123,7 @@ def import_weights(dag_node, path):
         for inf_id, inf_value in w_data.items():
             w_attr = '.weights[{}]'.format(inf_id)
             cmds.setAttr(wl_attr + w_attr, inf_value)
-    print 'Imported {} skinCluster weights.'.format(dag_node)
+    print('Imported {} skinCluster weights.'.format(dag_node))
 
 
 def add_influences(skin, influences):

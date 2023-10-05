@@ -51,7 +51,7 @@ class Control(Base):
         self.ctrl = self.obj
         self.control = self.base
         
-        attribute.lock_srt(self.ctrl, translate=lock_t, rotate=lock_r, scale=lock_s)
+        attribute.lock_srt(self.ctrl, translate=lock_t, rotate=lock_r, scale=lock_s, visibility=True)
         if not lock_r == 'xyz':
             attribute.display_rotate_order(self.ctrl)
 
@@ -106,7 +106,7 @@ class ControlChain(BaseChain):
 
         self.shapes = []
         for ctrl in self.ctrls:
-            attribute.lock_srt(ctrl, translate=lock_t, rotate=lock_r, scale=lock_s)
+            attribute.lock_srt(ctrl, translate=lock_t, rotate=lock_r, scale=lock_s, visibility=True)
             if not lock_r == 'xyz':
                 attribute.display_rotate_order(ctrl)
 
