@@ -5,25 +5,22 @@ import rigging.utils.globals as globals
 from rigging.utils.connect import constraint
 
 
-def ik(name, start_joint, end_effector, parent=None, add_to_suffix=None, add_to_tags=None, suffix=None, solver='ikSCsolver', polevector=None, **kwargs):
+def ik(name, start_joint, end_effector, parent=None, add_to_suffix=None, add_to_tags=None, suffix=None, solver='ikSCsolver', pole_vector=None, **kwargs):
     handle_name = _generate_suffix(name, add_to_tags, suffix, 'ikHandle', add_to_suffix)
     effector_name = _generate_suffix(name, add_to_tags, suffix, 'ikEffector', add_to_suffix)
-    solver_name = _generate_suffix(name, add_to_tags, suffix, solver, add_to_suffix)
 
     ik_list = cmds.ikHandle(name=handle_name, startJoint=start_joint, endEffector=end_effector, solver=solver, **kwargs)
 
     ik_handle = ik_list[0]
     ik_effector = cmds.rename(ik_list[1], effector_name)
-    ik_solver = cmds.ikHandle(ik_handle, query=True, solver=True)
-    ik_solver = cmds.rename(ik_solver, solver_name)
 
     if parent:
-        cmds.parent(ik_handle, parent, relative=True)
+        cmds.parent(ik_handle, parent, absolute=True)
 
-    if solver == 'ikRPsolver' and polevector:
-        constraint(polevector, ik_handle, type='poleVectorConstraint')
+    if solver == 'ikRPsolver' and pole_vector:
+        constraint(pole_vector, ik_handle, type='poleVectorConstraint')
 
-    return [ik_handle, ik_effector, ik_solver]
+    return [ik_handle, ik_effector]
 
 
 def _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix):

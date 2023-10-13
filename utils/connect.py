@@ -90,6 +90,20 @@ def sdk(driver_attr, driver_values, driven_attr, driven_values, interpolation='l
                                    ott=interpolation)
 
 
+def connect_decompose(driver_matrix, driven, attr='srt', axis='xyz', **kwargs):
+    decompose_node = common.create_node('decomposeMatrix', name=driven, **kwargs)
+    cmds.connectAttr(driver_matrix, '{}.inputMatrix'.format(decompose_node))
+    output_attr_dict = {'s' : 'outputScale',
+                        'r' : 'outputRotate',
+                        't' : 'outputTranslate'}
+    for at in attr:
+        for ax in axis:
+            cmds.connectAttr('{}.{}{}'.format(decompose_node, output_attr_dict[at], ax.upper()),
+                             '{}.{}{}'.format(driven, at, ax))
+
+    return decompose_node
+
+
 def constraint(driver, driven, snap=False, skip_translate='', skip_rotate='', skip_scale='', type='parentConstraint'):
     name = Name(driven, add_to_suffix=NODES_SUFFIX[type]).name
     constraint_node = None

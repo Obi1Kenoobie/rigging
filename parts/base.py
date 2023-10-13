@@ -17,7 +17,8 @@ class Base(object):
                  mtx=False,
                  mtx_type='transform',
                  suffix='SRT', 
-                 obj_type='transform', 
+                 obj_type='transform',
+                 joint_display='bone',
                  offset_matrix=False,
                  last=False,
                  keep_rotation=False,
@@ -44,7 +45,9 @@ class Base(object):
         self.bottom = None
         self.base = self
         hierarchy_list = []
-
+        joint_display_dict = {'bone' : 0,
+                              'multi' : 1,
+                              'none' : 2}
         if not spc and space_drivers:
             spc = True
 
@@ -60,6 +63,8 @@ class Base(object):
         if obj:
             self.obj = self.create_obj(obj_type)
             hierarchy_list.append(self.obj)
+            if obj_type == 'joint':
+                cmds.setAttr('{}.drawStyle'.format(self.obj), joint_display_dict[joint_display])
         if mtx:
             self.mtx = self.create_mtx()
             if self.mtx_type == 'locator':
@@ -146,6 +151,8 @@ class BaseChain(object):
                  mtx_type='transform',
                  suffix='SRT',
                  obj_type='transform',
+                 freeze_joint=False,
+                 joint_display='bone',
                  offset_matrix=False,
                  last=False,
                  keep_rotation=False,
@@ -193,6 +200,7 @@ class BaseChain(object):
                             mtx_type=mtx_type,
                             suffix=suffix,
                             obj_type=obj_type,
+                            joint_display=joint_display,
                             offset_matrix=offset_matrix,
                             last=is_last,
                             keep_rotation=keep_rotation,
@@ -211,6 +219,8 @@ class BaseChain(object):
             self.tops.append(base_obj.top)
             self.bottoms.append(base_obj.bottom)
 
+            if obj_type == 'joint' and freeze_joint:
+                cmds.makeIdentity(base_obj.obj, apply=True, rotate=True)
             obj_parent = base_obj.bottom
 
         self.top = self.tops[0]
