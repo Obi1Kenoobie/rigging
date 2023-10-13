@@ -56,7 +56,7 @@ class Data(object):
         return iter(self.__dict__)
 
     def __unicode__(self):
-        return unicode(repr(self.__dict__))
+        return str(repr(self.__dict__))
 
 
 def data_io(data=None, mode='export', file_name=None, asset_name=None, file_path=None, file_type=None, force_export=False):
