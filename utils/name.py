@@ -64,6 +64,9 @@ SHAPENAME_EXECPTION_DICT = {'curveInterp': ['CINT'],
                             }
 
 
+# endregion
+
+
 class RigNameError(Exception):
     """ Mill's Rig-Error """
 
