@@ -2,7 +2,7 @@ import json
 import os
 import maya.cmds as cmds
 
-DEFAULT_PATH = 'C://Users//{}//Documents//maya'.format(os.environ['USR'])
+DEFAULT_PATH = 'C://Users//{}//Documents//maya'.format(os.environ['USER'])
 
 
 class Data(object):
