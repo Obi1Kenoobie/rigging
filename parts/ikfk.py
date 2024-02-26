@@ -17,18 +17,21 @@ class IKFK(object):
                  driverA_tags='driver_fk',
                  driverB_tags='driver_ik',
                  driven_tags='result_ikfk'):
-
-        self.driverA = BaseChain(Name(name, add_to_tags=driverA_tags).name,
+        
+        driverA_name = Name(name).create_name(add_to_tags=driverA_tags)
+        self.driverA = BaseChain(driverA_name,
                                  matrices,
                                  zero=False,
                                  parent=parent)
-
-        self.driverB = BaseChain(Name(name, add_to_tags=driverB_tags).name,
+        
+        driverB_name = Name(name).create_name(add_to_tags=driverB_tags)
+        self.driverB = BaseChain(driverB_name,
                                  matrices,
                                  zero=False,
                                  parent=parent)
-
-        self.driven = BaseChain(Name(name, add_to_tags=driven_tags).name,
+        
+        driven_name = Name(name).create_name(add_to_tags=driven_tags)
+        self.driven = BaseChain(driven_name,
                                 matrices,
                                 zero=False,
                                 parent=parent)
@@ -47,6 +50,7 @@ class IKFK(object):
 
         if attr_obj:
             self.blend_attribute = '{}.{}'.format(attr_obj, blend_attr)
-            add_attribute(attr_obj, blend_attr, max=1.0, min=0.0)
+            if not cmds.attributeQuery(blend_attr, node=attr_obj, exists=True):
+                add_attribute(attr_obj, blend_attr, max=1.0, min=0.0)
             for blend_node in self.blend_nodes:
                 cmds.connectAttr(self.blend_attribute, '{}.envelope'.format(blend_node))

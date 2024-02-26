@@ -3,11 +3,13 @@ import re
 
 import rigging.utils.globals as globals
 from rigging.utils.connect import constraint
+from rigging.utils.name import Name
 
 
-def ik(name, start_joint, end_effector, parent=None, add_to_suffix=None, add_to_tags=None, suffix=None, solver='ikSCsolver', pole_vector=None, **kwargs):
-    handle_name = _generate_suffix(name, add_to_tags, suffix, 'ikHandle', add_to_suffix)
-    effector_name = _generate_suffix(name, add_to_tags, suffix, 'ikEffector', add_to_suffix)
+
+def ik(name, start_joint, end_effector, parent=None, syntax_list=None, add_to_suffix=None, add_to_tags=None, suffix=None, solver='ikSCsolver', pole_vector=None, **kwargs):
+    handle_name = _generate_suffix(name, syntax_list, add_to_tags, suffix, 'ikHandle', add_to_suffix)
+    effector_name = _generate_suffix(name, syntax_list, add_to_tags, suffix, 'ikEffector', add_to_suffix)
 
     ik_list = cmds.ikHandle(name=handle_name, startJoint=start_joint, endEffector=end_effector, solver=solver, **kwargs)
 
@@ -23,7 +25,8 @@ def ik(name, start_joint, end_effector, parent=None, add_to_suffix=None, add_to_
     return [ik_handle, ik_effector]
 
 
-def _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix):
+
+def _generate_suffix(name, syntax_list, add_to_tags, suffix, node_type, add_to_suffix):
     """returns name and shape-suffix as list
 
     Args:
@@ -36,20 +39,9 @@ def _generate_suffix(name, add_to_tags, suffix, node_type, add_to_suffix):
     Returns:
        str: name
     """
-    # split suffix from name
-    suffix_RE = re.compile('(_[_A-Z]+[A-Z])')
-    found = suffix_RE.split(name)
-    if len(found) > 1:
-        name = found[0]
-    if add_to_tags:
-        if isinstance(add_to_tags, list):
-            add_to_tags = '_'.join(add_to_tags)
-        name += '_' + add_to_tags
-    if suffix:
-        name += '_' + suffix
-    else:
-        name += '_' + globals.NODES_SUFFIX[node_type]
-
-    if add_to_suffix:
-        name += '_' + add_to_suffix.upper()
+    
+    if not suffix:
+        suffix=globals.NODES_SUFFIX[node_type]
+    namer = Name(name, add_to_tags=add_to_tags, add_to_suffix=add_to_suffix, suffix=suffix)
+    name = namer.create_name(syntax_list=syntax_list)
     return name

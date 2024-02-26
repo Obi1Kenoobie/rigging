@@ -2,7 +2,7 @@ import os
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
-from rigging.utils import data_io, common, api, globals
+from rigging.utils import data_io, common, api, globals, math
 from rigging.utils.name import Name
 
 SHAPES_PATH = os.path.dirname(os.path.realpath(__file__)) + "\\_shapes"
@@ -12,8 +12,11 @@ def create(name,
            shape_type=None, 
            shape_up='+y', 
            shape_aim='+x', 
-           color=None, 
-           size=1.0, 
+           color=None,
+           rgb_color=None, 
+           size=1.0,
+           line_width=1.0,
+           offset=[0.0, 0.0, 0.0], 
            parent=None, 
            positions=[], 
            knots=[], 
@@ -27,7 +30,6 @@ def create(name,
     if shape_type:
         data = import_shape(file_name=shape_type, file_path=SHAPES_PATH)
         for key in data['shapes']:
-            color = data['shapes'][key]['color']
             positions = data['shapes'][key]['positions']
             knots = data['shapes'][key]['knots']
             degree = data['shapes'][key]['degree']
@@ -35,22 +37,33 @@ def create(name,
     
     # scaling things up
     positions = [[pos[0]*size, pos[1]*size, pos[2]*size] for pos in positions]
+    
+    # rotating points to alignt to aim and up axis
+    rotated_positions = []
+    for pos in positions:
+        new_pos = math.rotate_position(pos, shape_aim, shape_up)
+        rotated_positions.append([new_pos.x, new_pos.y, new_pos.z])
+    positions = rotated_positions
+    
+    # apply offset
+    positions = [[pos[0]+offset[0], pos[1]+offset[1], pos[2]+offset[2]] for pos in positions]
+    
     cvs = om.MPointArray(positions)
     knots = om.MDoubleArray(knots)
 
     if not color and side:
         color = globals.COLOR_SIDE_TO_STR[side]
-
     if not parent:
         parent = cmds.createNode('transform', name=name)
-    
+    if side == '' and not color:
+        color = 'yellow'
     parent = api.get_mobj(parent)
-
     nurbsFn = om.MFnNurbsCurve()
     shape = nurbsFn.create(cvs, knots, degree, form, False, False, parent=parent)
     shapFn = om.MFnDependencyNode(shape)
     shapFn.setName(shape_name)
-    common.set_override_color(shape_name, color=color)
+    common.set_override_color(shape_name, color=color, rgb_color=rgb_color)
+    cmds.setAttr('{}.lineWidth'.format(shape_name), line_width)
     return shape_name
 
 
@@ -59,11 +72,11 @@ def mirror(dag_node, world=False):
     side = namer.side
     if not side:
         return cmds.warning('object has not specific side.')
-    base_side = 'L_'
-    mirror_side = 'R_'
-    if 'R' in side:
-        base_side = 'R_'
-        mirror_side = 'L_'
+    base_side = 'l_'
+    mirror_side = 'r_'
+    if 'r' in side:
+        base_side = 'r_'
+        mirror_side = 'l_'
     shapes = common.get_shapes(dag_node)
 
     # find mirror transform

@@ -188,12 +188,46 @@ def lerp_vectors(start_vec, end_vec, num=10):
         num (int): number of samples.
 
     Returns:
-        list[om.MVector]: list of values
+        list[om.MVector]: list of vectors
     """
     x_gen = lerp_generator(start_vec.x, end_vec.x, num=num)
     y_gen = lerp_generator(start_vec.y, end_vec.y, num=num)
     z_gen = lerp_generator(start_vec.z, end_vec.z, num=num)
     return [om.MVector(x, y, z) for x, y, z in zip(x_gen, y_gen, z_gen)]
+
+
+def lerp_matrices(start_mtx, end_mtx, num=10, rotation_order='xyz'):
+    """ Returns a list of interpolated matrices between the given ones.
+
+    Args:
+        start_mtx (om.MMatrix): start matrix.
+        end_mtx (om.MMatrix): end matrix.
+        num (int): number of samples.
+        rotation_order (str): rotation order.
+
+    Returns:
+        list[om.MMatrix]: list of matrices
+    """
+    start_cmp = matrix_components(start_mtx, rotation_order=rotation_order)
+    end_cmp = matrix_components(end_mtx, rotation_order=rotation_order)
+    
+    tx_gen = lerp_generator(start_cmp.translation[0], end_cmp.translation[0], num=num)
+    ty_gen = lerp_generator(start_cmp.translation[1], end_cmp.translation[1], num=num)
+    tz_gen = lerp_generator(start_cmp.translation[2], end_cmp.translation[2], num=num)
+    
+    rx_gen = lerp_generator(start_cmp.rotation[0], end_cmp.rotation[0], num=num)
+    ry_gen = lerp_generator(start_cmp.rotation[1], end_cmp.rotation[1], num=num)
+    rz_gen = lerp_generator(start_cmp.rotation[2], end_cmp.rotation[2], num=num)
+    
+    sx_gen = lerp_generator(start_cmp.scale[0], end_cmp.scale[0], num=num)
+    sy_gen = lerp_generator(start_cmp.scale[1], end_cmp.scale[1], num=num)
+    sz_gen = lerp_generator(start_cmp.scale[2], end_cmp.scale[2], num=num)
+    
+    lerped = []
+    for tx, ty, tz, rx, ry, rz, sx, sy, sz in zip(tx_gen, ty_gen, tz_gen, rx_gen, ry_gen, rz_gen, sx_gen, sy_gen, sz_gen):
+        lerped.append(create_matrix(translation=[tx, ty, tz], rotation=[rx, ry, rz], scale=[sx, sy, sz], rotation_order=rotation_order))
+
+    return lerped
 
 
 def lerp_generator(start, end, num=10):
@@ -260,7 +294,7 @@ def to_eulerrotation(rotation, rotation_order='xyz'):
     return om.MEulerRotation(x, y, z, order=rotate_order)
 
 
-def create_matrix(translation=[0, 0, 0], rotation=[0, 0, 0], scale=[0, 0, 0], rotation_order='xyz'):
+def create_matrix(translation=[0, 0, 0], rotation=[0, 0, 0], scale=[1, 1, 1], rotation_order='xyz'):
     tmatrix = om.MTransformationMatrix()
     translation = to_mvector(translation)
     rotation = to_eulerrotation(rotation, rotation_order=rotation_order)
@@ -311,6 +345,119 @@ def get_rotation_matrix(rotation, rotation_order='xyz'):
     return euler.asMatrix()
 
 
+def get_position_matrix(dag_node, world=True):
+    matrix = get_matrix(dag_node, world=world)
+    return create_matrix(translation=translation_from_matrix(matrix))
+
+
 def get_position_vector(dag_node, world=True):
     matrix = get_matrix(dag_node, world=world)
     return translation_from_matrix(matrix)
+
+
+def rotate_position(position, aim_axis, up_axis):
+    """Reorder a position vector to fit the aim_axis and up_axis criteria
+
+    Args:
+        position (list/om.MVector): position vector
+        aim_axis (str): Aim axis: +x, +y, +z, -x, -y, -z
+        up_axis (str): Up axis: +x, +y, +z, -x, -y, -z
+
+    Returns:
+        om.MVector: Return rotated position vector
+    """
+
+    if isinstance(position, list):
+        position = to_mvector(position)
+
+    x = position.x
+    y = position.y
+    z = position.z
+
+    if aim_axis[-1] != up_axis[-1]:
+        if aim_axis[0] == '-':
+            x, z = -x, -z
+        if up_axis[0] == '-':
+            y, z = -y, -z
+
+        if aim_axis[-1] == 'x':
+            if up_axis[-1] == 'y':
+                x, y, z = x, y, z
+            elif up_axis[-1] == 'z':
+                x, y, z = x, -z, y
+
+        elif aim_axis[-1] == 'y':
+            if up_axis[-1] == 'x':
+                x, y, z = y, x, -z
+            if up_axis[-1] == 'z':
+                x, y, z = z, x, y
+
+        elif aim_axis[-1] == 'z':
+            if up_axis[-1] == 'x':
+                x, y, z = y, z, x
+            if up_axis[-1] == 'y':
+                x, y, z = -z, y, x
+
+    return om.MVector(x, y, z)
+
+
+def get_align_matrix(target_matrix, source_matrix, source_aim='+x', source_up='+y', target_aim='+x', target_up='+y', target_position=False):
+    """ Function reutrns a matrix aligned to a target matrix specified axes.
+    
+    Args:
+        target_matrix (om.MMatrix): target matrix for alignment.
+        source_aim (str): Source Aim axis: +x, +y, +z, -x, -y, -z
+        source_up (str): Source Up axis: +x, +y, +z, -x, -y, -z
+        target_aim (str): Target Aim axis: +x, +y, +z, -x, -y, -z
+        target_up (str): Target Up axis: +x, +y, +z, -x, -y, -z
+        target_position (bool): If true will position the aligned matrix at target position.
+
+    Returns:
+        om.MMatrix: aligned matrix.
+    """
+    aim_vec = get_axis_vector(target_matrix, target_aim)
+    up_vec = get_axis_vector(target_matrix, target_up)
+
+    align_mtx = get_aim_matrix(om.MVector(), aim_vec, up_vec, aim_axis=source_aim, up_axis=source_up)
+    if target_position:
+        align_mtx[-4] = target_matrix[-4]
+        align_mtx[-3] = target_matrix[-3]
+        align_mtx[-2] = target_matrix[-2]
+
+    else:
+        align_mtx[-4] = source_matrix[-4]
+        align_mtx[-3] = source_matrix[-3]
+        align_mtx[-2] = source_matrix[-2]
+    
+    return align_mtx
+
+
+def get_polevector_position_vector(matrices, pv_distance=40.0):
+    """ Function used to calculate pole vector position given at least three matrices to form a plane.
+    
+    Args:
+        matrices (list[om.MMatrix]): List of matrices used to calculate plane.
+        pv_distance (float): pole vector distance from second last matrices alement.
+
+    Returns:
+        om.MVector: pole vector position vector.
+    """
+    if len(matrices) < 3:
+        cmds.warning('Need at least three matrices in order to calculate pole vector position!')
+        return om.MVector()
+    
+    positions = [translation_from_matrix(mtx) for mtx in matrices]
+    
+    # triangle long side normalized vector
+    p0p2n = (positions[-1] - positions[0]).normalize() 
+    
+    # tirangle first side
+    p0p1 = (positions[-2] - positions[0])
+    
+    # first side projection onto long side vector
+    p0p1prj = (p0p1 * p0p2n) * p0p2n + positions[0]
+    
+    # final pole vector position at set distance from second position
+    p0p1prjp1 = ((positions[-2] - p0p1prj).normalize() * pv_distance) + positions[-2]
+    
+    return p0p1prjp1

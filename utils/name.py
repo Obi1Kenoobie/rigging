@@ -3,17 +3,17 @@ import re
 import maya.cmds as cmds
 
 from rigging.utils.globals import NODES_SUFFIX, SIDE_SWITCH
-from rigging.utils.common import get_shapes, get_parent
+
 
 # region CONSTANTS
 namespace_RE = '(\S+:)?'
-side_RE = '([CLR][FMB]*[\d]*_)?'
+side_RE = '(_[lr][fmb]*[\d]*)?'
 part_RE = '([A-Za-z][A-Za-z]+[a-z]+[0-9]*)?'
 partindex_RE = '([A-Z]+)?'
-index_RE = '(_\d+(?=_)|_END(?=_))?'
-tags_RE = '(_[a-z0-9]*[a-zA-z0-9]*[a-z0-9]+)*'
-suffix_RE = '(_[_A-Z]+[A-Z])*'
-splitname_RE = re.compile(side_RE + part_RE + partindex_RE + index_RE + tags_RE + suffix_RE)
+index_RE = '(_\d+(?=_|$)|_end(?=_|$))?'
+tags_RE = '(_[a-z0-9]*[a-zA-z0-9]*[a-z0-9]_+)*'
+suffix_RE = '([_a-z]+[a-z])*'
+splitname_RE = re.compile(part_RE + partindex_RE + index_RE + side_RE + tags_RE + suffix_RE)
 shape_RE = re.compile('Shape\w*\Z')
 camelcase_RE = re.compile('\D+([A-Z][a-z]+)')
 unpad_RE = re.compile('[1-9]+0*|\D*', re.IGNORECASE)
@@ -21,31 +21,31 @@ unpad_RE = re.compile('[1-9]+0*|\D*', re.IGNORECASE)
 componentindex_RE = re.compile('\d+')
 enddigit_RE = re.compile('\w+\D+')
 
-NONUNIQUE_SUFFIX = 'NONUNIQUE'
+NONUNIQUE_SUFFIX = 'nonunique'
 
 SYNTAX_LIST = ['namespace',
-               'side',
                'part',
                'partindex',
                'index',
+               'side',
                'tags',
                'suffix'
                ]
 
 SYNTAX_DICT = {'namespace': '{namespace}',
-               'side': '{side}_',
                'part': '{part}',
                'partindex': '{partindex}',
                'index': '_{index}',
+               'side': '_{side}',
                'tags': '_{tags}',
                'suffix': '_{suffix}'
                }
 
-SYNTAX_STYLE_DICT = {'namespace': 'upper',
-                     'side': 'upper',
+SYNTAX_STYLE_DICT = {'namespace': 'camelcase',
                      'part': 'camelcase',
                      'partindex': 'upper',
                      'index': 'index',
+                     'side': 'lower',
                      'tags': 'lower',
                      'suffix': 'suffix'
                      }
@@ -59,8 +59,8 @@ SYNTAX_SHORTNAME_DICT = {'ns': 'namespace',
 
 
 # exceptions where the shape-name is not matching exactly the name of the transform
-SHAPENAME_EXECPTION_DICT = {'curveInterp': ['CINT'],
-                            'locator': ['SHARED_CTRL', 'CNSTShape', 'LOCShape'],
+SHAPENAME_EXECPTION_DICT = {'curveInterp': ['cint'],
+                            'locator': ['shared_ctrl', 'cnstShape', 'locShape'],
                             }
 
 
@@ -97,7 +97,7 @@ class Name(object):
 
     def __init__(self, name=None, namespace=None, side=None, part=None, partindex=None,
                  index=None, tags=None, suffix=None, add_to_tags=None, add_to_suffix=None,
-                 pad=1, unique=False):
+                 pad=2, unique=False):
 
         # globals
         self._syntax_list = SYNTAX_LIST
@@ -180,7 +180,7 @@ class Name(object):
         """Set side-property """
         value = self._check_input(value)
         if value is None:
-            self._side = 'C'
+            self._side = ''
         else:
             self._side = self._spellcheck('side', value)
 
@@ -239,7 +239,7 @@ class Name(object):
     def suffix(self):
         suffix = self._suffix
         if suffix in [None, '', []]:
-            self._suffix = 'TMP'
+            self._suffix = 'tmp'
         return self._suffix
 
     @suffix.setter
@@ -338,7 +338,7 @@ class Name(object):
         name = template.format(**elem_dict)
 
         if elem_dict.get('suffix') is None:
-            elem_dict['suffix'] = 'TMP'
+            elem_dict['suffix'] = 'tmp'
 
         # this section checks the scene for duplicates of the name or duplicates
         # of the name including 'NONUNIQUE' plus any number.
@@ -561,10 +561,9 @@ class Name(object):
 
         r = self._splitname_RE.search(self._name)
         result_list = list(r.groups())
-
         # special case 'END' in index
-        if result_list[5] == '_END' and not self._suffix:
-            raise RigNameError('END is not a valid Suffix!')
+        if result_list[5] == '_end' and not self._suffix:
+            raise RigNameError('end is not a valid Suffix!')
 
         found_dict = {item: None for item in self._syntax_list}
         for key, value in zip(self._syntax_list[1:], result_list):
@@ -593,7 +592,7 @@ class Name(object):
             if elem == 'tags':
                 pass
             elif elem == 'suffix':
-                value = get_suffix_by_nodetype(value).upper()
+                value = get_suffix_by_nodetype(value).lower()
             else:
                 value = namestyle(value,
                                   style=SYNTAX_STYLE_DICT[elem],
@@ -830,7 +829,7 @@ def indexer(name, padding=2):
         str
     """
 
-    if name == 'END':
+    if name == 'end':
         return name
     elif name == '*':
         return name
@@ -860,7 +859,7 @@ def namestyle(name, style=None, padding=3):
     elif style == 'index':
         return indexer(name, padding)
     elif style == 'suffix':
-        suffix = name.upper()
+        suffix = name.lower()
         if suffix.endswith('SHAPE'):
             suffix = suffix[:-5] + 'Shape'
         return suffix
@@ -944,8 +943,8 @@ def fix_shapenames(obj):
 
     else:
         for shp in shp_list:  # if several shapenodes exist, rename by type
-            if namer.suffix == 'CTRL' and cmds.objectType(shp) == 'nurbsCurve':
-                shp_name = namer.replace(suffix='CTRLShape')
+            if namer.suffix == 'ctrl' and cmds.objectType(shp) == 'nurbsCurve':
+                shp_name = namer.replace(suffix='ctrlShape')
             else:
                 shp_name = namer.replace(suffix=get_typesuffix(shp) + 'Shape')
             cmds.rename(shp, shp_name)
@@ -1098,7 +1097,17 @@ def create_chain_names(count, startindex=1, last_is_end=False, force_index=True,
 
     # replace the last one if needed
     if last_is_end:
-        index = 'END'
+        index = 'end'
         out[-1] = namer.replace(index=index, add_to_tags=add_to_tags)
     return out
+
+
+def get_parent(dag_node, **kwargs):
+    parent = cmds.listRelatives(dag_node, parent=True, **kwargs)
+    if parent:
+        return parent[0]
+        
+
+def get_shapes(dag_node, **kwargs):
+    return cmds.listRelatives(dag_node, shapes=True, **kwargs)
 # endregion

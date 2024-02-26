@@ -19,7 +19,8 @@ class IK(BaseChain):
                  ofs=False,
                  obj=True,
                  mtx=False,
-                 suffix='JNT',
+                 suffix='jnt',
+                 syntax_list=None,
                  last=False,
                  keep_rotation=False,
                  **kwargs):
@@ -32,6 +33,8 @@ class IK(BaseChain):
                                  obj=obj,
                                  mtx=mtx,
                                  suffix=suffix,
+                                 syntax_list=syntax_list,
+                                 add_to_tags=add_to_tags,
                                  obj_type='joint',
                                  joint_display=joint_display,
                                  freeze_joint=True,

@@ -36,7 +36,7 @@ def create_knot_vector(cv_num, degree, periodic=False):
         return knots_array
 
 
-def create(name, points, degree=3, bezier=False, periodic=False, add_to_tags=None, suffix='CRV'):
+def create(name, points, degree=3, bezier=False, periodic=False, add_to_tags=None, suffix='crv'):
     """ Creates a curve with cvs at the given points.
 
     Args:

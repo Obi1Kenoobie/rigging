@@ -98,7 +98,7 @@ def import_weights(dag_node, path):
     weight_dict = data_io.data_io(mode='import', file_name=dag_node, file_path=path)
 
     namer = Name(dag_node)
-    skin_name = namer.replace(suffix='SC')
+    skin_name = namer.replace(suffix='skcl')
     shape = common.get_shape(dag_node)
     influences = weight_dict['joints']
     weights = weight_dict['weights']

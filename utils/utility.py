@@ -9,11 +9,14 @@ def create_aim_locator(points, aim_axis='+z', up_axis='+y'):
     positions = [om.MVector(cmds.xform(vtx, q=True, t=True, ws=True)) for vtx in points]
 
     position = (positions[0] + positions[1]) / 2
-    up_position = position + AXIS_STR_TO_MVEC[up_axis]
 
+    up_position = position + AXIS_STR_TO_MVEC[up_axis]
+    
     if len(positions) == 2:
         positions = [positions[0], up_position, positions[1]]
-
+    elif len(positions) > 2:
+        up_position = position + ((positions[2] - position) ^ (positions[1] - position))
     aim_matrix = math.get_aim_matrix(position, positions[2], up_position, aim_axis=aim_axis, up_axis=up_axis)
-
+    
     common.create_node('locator', basename, matrix=aim_matrix)
+
