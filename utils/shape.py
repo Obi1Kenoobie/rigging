@@ -71,12 +71,17 @@ def mirror(dag_node, world=False):
     namer = Name(dag_node)
     side = namer.side
     if not side:
-        return cmds.warning('object has not specific side.')
-    base_side = 'l_'
-    mirror_side = 'r_'
+        if '_l_' in dag_node:
+            side = 'l'
+        elif '_r_' in dag_node:
+            side = 'r'
+        else:
+            return cmds.warning('object has not specific side.')
+    base_side = '_l_'
+    mirror_side = '_r_'
     if 'r' in side:
-        base_side = 'r_'
-        mirror_side = 'l_'
+        base_side = '_r_'
+        mirror_side = '_l_'
     shapes = common.get_shapes(dag_node)
 
     # find mirror transform
@@ -98,11 +103,12 @@ def export_shape(dag_node, file_name=None, asset_name=None, file_path=None, worl
         file_name = dag_node
     data = get_shape_data(dag_node, world=world)
     data_io.data_io(data=data, mode='export', file_name=file_name, asset_name=asset_name, file_path=file_path, file_type='controlShape', force_export=force_export)
-
+    print('Exported {0} shape data to: {1}/{0}.json'.format(dag_node, file_path))
 
 def import_shape(file_name=None, file_path=None):
-    return data_io.data_io(mode='import', file_name=file_name, file_path=file_path)
-
+    data = data_io.data_io(mode='import', file_name=file_name, file_path=file_path)
+    print('Imported {0} shape data from: {1}/{0}.json'.format(file_name, file_path))
+    return data
 
 def is_nurbsCurve(curve_shape):
     if cmds.objectType(curve_shape) == 'transform':

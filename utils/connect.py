@@ -197,39 +197,42 @@ def constraint(driver, driven, snap=False, skip_translate='', skip_rotate='', sk
                                                         attr), 
                            conn_dict)
 
-    return constraint_node
+    return constraint_node[0]
 
 
 def rebuild_connection(conn_dict, isStorable=True):
     # deleting old nodes
-    cmds.delete(conn_dict['nodes'])
+    for node in conn_dict['nodes']:
+        if cmds.objExists(node):
+            cmds.delete(node)
+
     if conn_dict['type'] == 'matrix_constraint':
-        matrix_constraint(conn_dict['attributes'][0], 
+        return matrix_constraint(conn_dict['attributes'][0], 
+                                 conn_dict['attributes'][1], 
+                                 conn_dict['attributes'][2], 
+                                 conn_dict['attributes'][3], 
+                                 isStorable)
+
+    if conn_dict['type'] == 'aim_matrix_constraint':
+       return  aim_matrix_constraint(conn_dict['attributes'][0], 
+                                     conn_dict['attributes'][1], 
+                                     conn_dict['attributes'][2], 
+                                     conn_dict['attributes'][3], 
+                                     conn_dict['attributes'][4], 
+                                     conn_dict['attributes'][5], 
+                                     conn_dict['attributes'][6], 
+                                     isStorable)
+    if conn_dict['type'] == 'constraint':
+        return constraint(conn_dict['attributes'][0], 
                           conn_dict['attributes'][1], 
                           conn_dict['attributes'][2], 
                           conn_dict['attributes'][3], 
+                          conn_dict['attributes'][4], 
+                          conn_dict['attributes'][5], 
+                          conn_dict['attributes'][6],
+                          conn_dict['attributes'][7], 
+                          conn_dict['attributes'][8], 
+                          conn_dict['attributes'][9], 
+                          conn_dict['attributes'][10], 
+                          conn_dict['attributes'][11],  
                           isStorable)
-
-    if conn_dict['type'] == 'aim_matrix_constraint':
-        aim_matrix_constraint(conn_dict['attributes'][0], 
-                              conn_dict['attributes'][1], 
-                              conn_dict['attributes'][2], 
-                              conn_dict['attributes'][3], 
-                              conn_dict['attributes'][4], 
-                              conn_dict['attributes'][5], 
-                              conn_dict['attributes'][6], 
-                              isStorable)
-    if conn_dict['type'] == 'constraint':
-        constraint(conn_dict['attributes'][0], 
-                   conn_dict['attributes'][1], 
-                   conn_dict['attributes'][2], 
-                   conn_dict['attributes'][3], 
-                   conn_dict['attributes'][4], 
-                   conn_dict['attributes'][5], 
-                   conn_dict['attributes'][6],
-                   conn_dict['attributes'][7], 
-                   conn_dict['attributes'][8], 
-                   conn_dict['attributes'][9], 
-                   conn_dict['attributes'][10], 
-                   conn_dict['attributes'][11],  
-                   isStorable)

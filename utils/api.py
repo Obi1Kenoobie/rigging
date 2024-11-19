@@ -33,8 +33,15 @@ def get_mfn_nurbsCurve(dag_node):
     return om.MFnNurbsCurve(mdagpath)
 
 
-def get_mfn_skinCluster(dag_node):
+def get_mfn_mesh(dag_node):
+    if cmds.objectType(dag_node, isType='transform'):
+        dag_node = get_shape(dag_node)
     mdagpath = get_dagpath(dag_node)
+    return om.MFnMesh(mdagpath)
+
+
+def get_mfn_skinCluster(dag_node):
+    mdagpath = get_mobj(dag_node)
     return oma.MFnSkinCluster(mdagpath)
 
 

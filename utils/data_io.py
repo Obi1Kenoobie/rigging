@@ -95,6 +95,9 @@ def data_io(data=None, mode='export', file_name=None, asset_name=None, file_path
     if not file_name:
         file_name = 'tmp'
 
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     full_path = '{}\{}.json'.format(path, file_name)
 
     if mode == 'export':

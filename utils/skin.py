@@ -43,7 +43,7 @@ def get_weights_dict(skin):
     # whose value is the influence list id
     inf_ids = {}
     infs = []
-    for x in xrange(len(inf_dags)):
+    for x in range(len(inf_dags)):
         inf_path = inf_dags[x].fullPathName()
         inf_id = int(skinFn.indexForInfluenceObject(inf_dags[x]))
         inf_ids[inf_id] = x
@@ -60,7 +60,7 @@ def get_weights_dict(skin):
     # the value is another dictionary whose key is the influence id and 
     # value is the weight for that influence
     weights = {}
-    for vId in xrange(wl_plug.numElements()):
+    for vId in range(wl_plug.numElements()):
         vtx_weights = {}
         # tell the weights attribute which vertex id it represents
         w_plug.selectAncestorLogicalIndex(vId, wl_attr)

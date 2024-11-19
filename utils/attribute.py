@@ -49,7 +49,8 @@ def add_proxy_attribute(dag_nodes, attribute_name, attr_type='float', keyable=Tr
 
 
 def add_string_attribute(dag_node, attribute_name, **kwargs):
-    cmds.addAttr(dag_node, longName=attribute_name, dataType='string', **kwargs)
+    if not cmds.attributeQuery(attribute_name, n=dag_node, exists=True):
+        cmds.addAttr(dag_node, longName=attribute_name, dataType='string', **kwargs)
     return attribute_name
 
 
