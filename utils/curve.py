@@ -36,7 +36,11 @@ def create_knot_vector(cv_num, degree, periodic=False):
         return knots_array
 
 
+<<<<<<< HEAD
 def create(name, points, degree=3, bezier=False, periodic=False, normalize=False, add_to_tags=None, suffix='crv'):
+=======
+def create(name, points, degree=3, bezier=False, periodic=False, add_to_tags=None, suffix='crv'):
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
     """ Creates a curve with cvs at the given points.
 
     Args:
@@ -58,10 +62,14 @@ def create(name, points, degree=3, bezier=False, periodic=False, normalize=False
         end_points = points[:degree]
         points.extend(end_points)
     knots = create_knot_vector(len(points), degree=degree, periodic=periodic)
+<<<<<<< HEAD
     curve = cmds.curve(name=namer.name, degree=degree, knot=knots, point=points, periodic=periodic, bezier=bezier)
     if normalize:
         curve = cmds.rebuildCurve(curve, ch=False, rpo=True, rt=0, end=1, kr=0, kcp=True, kep=True, kt=False ,d=3, tol=0.01)[0]
     return curve
+=======
+    return cmds.curve(name=namer.name, degree=degree, knot=knots, point=points, periodic=periodic, bezier=bezier)
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
 
 def closet_point_on_curve(point, curve):

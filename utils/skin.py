@@ -87,7 +87,20 @@ def get_weights_dict(skin):
     return weights_dict
 
 
+<<<<<<< HEAD
 def apply_weights(dag_node, weight_dict):
+=======
+def export_weights(dag_node, path):
+    skin = get_skincluster(dag_node)
+    weight_dict = get_weights_dict(skin)
+    data_io.data_io(weight_dict, file_name=dag_node, file_path=path, force_export=True)
+    print('Exported {0} skin weights to: {1}/{0}.json'.format(dag_node, path))
+
+
+def import_weights(dag_node, path):
+    weight_dict = data_io.data_io(mode='import', file_name=dag_node, file_path=path)
+
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
     namer = Name(dag_node)
     skin_name = namer.replace(suffix='skcl')
     shape = common.get_shape(dag_node)
@@ -117,6 +130,7 @@ def apply_weights(dag_node, weight_dict):
     print('Imported {} skinCluster weights.'.format(dag_node))
 
 
+<<<<<<< HEAD
 def export_weights(dag_node, path):
     skin = get_skincluster(dag_node)
     weight_dict = get_weights_dict(skin)
@@ -130,6 +144,8 @@ def import_weights(dag_node, path):
     apply_weights(dag_node, weights_dict)
 
 
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 def add_influences(skin, influences):
     """Add influence to skinCluster
 

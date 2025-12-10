@@ -5,10 +5,14 @@ from rigging.utils.common import create_node
 
 
 def add_attribute(dag_node, attribute_name, attr_type='float', keyable=True, channel_box=True, lock=False, reverse=False, **kwargs):
+<<<<<<< HEAD
     try:
         cmds.addAttr(dag_node, longName=attribute_name, attributeType=attr_type, **kwargs)
     except:
         cmds.warning('{} already an attribute of {}.'.format(attribute_name, dag_node))
+=======
+    cmds.addAttr(dag_node, longName=attribute_name, attributeType=attr_type, **kwargs)
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
     cmds.setAttr('{}.{}'.format(dag_node, attribute_name), lock=lock, channelBox=channel_box)
     cmds.setAttr('{}.{}'.format(dag_node, attribute_name), channelBox=channel_box)
     cmds.setAttr('{}.{}'.format(dag_node, attribute_name), keyable=keyable)
@@ -46,7 +50,11 @@ def add_proxy_attribute(dag_nodes, attribute_name, attr_type='float', keyable=Tr
                          lock=lock,
                          **kwargs)
     for dag_node in dag_nodes[1:]:
+<<<<<<< HEAD
         cmds.addAttr(dag_node, longName=attr, proxy='{}.{}'.format(dag_nodes[0],attr))
+=======
+        cmds.addAttr(dag_node, longName=attr, proxy=attr)
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
     return attr
 

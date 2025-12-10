@@ -28,18 +28,28 @@ class Spline(object):
                  attr_objs=None,
                  degree=3,
                  bezier=True,
+<<<<<<< HEAD
                  use_tangents=True,
                  aim_axis='+x',
                  periodic=False,
                  add_to_tags=None,
                  suffix='crv',
+=======
+                 aim_axis='+x',
+                 periodic=False,
+                 add_to_tags=None,
+                 suffix='CRV',
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                  length_attr=False):
         self.namer = Name(name)
         self.drivers = drivers
         self.attr_objs = attr_objs
         self.degree = degree
         self.bezier = bezier
+<<<<<<< HEAD
         self.use_tangets = use_tangents
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         self.aim_axis = aim_axis
         self.periodic = periodic
         self.add_to_tags = add_to_tags
@@ -53,7 +63,10 @@ class Spline(object):
         self.curve = None
         self.curve_shape = None
         self.curve_info = None
+<<<<<<< HEAD
         self.length_mult = None
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         self.default_length = None
         self.spline = self
 
@@ -61,13 +74,20 @@ class Spline(object):
         self.driver_nodes = self.create_driver_nodes()
         self.position_nodes = [node for node in self.driver_nodes if cmds.objectType(node, isType='decomposeMatrix')]
         self.positions = self.get_driver_positions()
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         self.curve = curve.create(self.namer.name,
                                   self.positions,
                                   degree=self.degree,
                                   bezier=self.bezier,
                                   periodic=self.periodic,
                                   add_to_tags=self.add_to_tags,
+<<<<<<< HEAD
                                   normalize=True,
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                   suffix=self.suffix)
         self.curve_shape = common.get_shape(self.curve)
         self.default_length = curve.get_length(self.curve_shape)
@@ -75,14 +95,19 @@ class Spline(object):
         self._connect_drivers(self.driver_nodes, self.curve_shape)
 
         if self.length_attr:
+<<<<<<< HEAD
             nodes = add_length_attribute(self.curve, self.attr_objs)
             self.curve_info = nodes[0]
             self.length_mult = nodes[1]
+=======
+            self.curve_info = add_length_attribute(self.curve, self.attr_objs)
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
     def create_driver_nodes(self):
         driver_nodes = []
         axis = self.aim_axis[-1]
         for i, driver in enumerate(self.drivers):
+<<<<<<< HEAD
             if self.use_tangets:
                 axes = ['{}{}'.format(sign, axis) for sign in '+-']
                 if not cmds.attributeQuery('TANGENTS', node=self.attr_objs[i], exists=True):
@@ -104,6 +129,24 @@ class Spline(object):
                 decomp = common.create_node('decomposeMatrix', driver)
                 cmds.connectAttr(driver + '.worldMatrix', decomp + '.inputMatrix')
                 driver_nodes.append(decomp)
+=======
+            axes = ['{}{}'.format(sign, axis) for sign in '+-']
+            if not cmds.attributeQuery('TANGENTS', node=self.attr_objs[i], exists=True):
+                attribute.add_header_attribute(self.attr_objs[i], 'TANGENTS')
+            if i == 0:
+                nodes = transform.create_axis_nodes(driver, axes=[axes[0]])
+                self._add_connect_tangent(self.attr_objs[i], nodes[0], 'tangentOut', axis)
+                nodes.reverse()
+            elif i == len(self.drivers) - 1:
+                nodes = transform.create_axis_nodes(driver, axes=[axes[1]])
+                self._add_connect_tangent(self.attr_objs[i], nodes[0], 'tangentIn', axis)
+            else:
+                nodes = transform.create_axis_nodes(driver, axes=axes)
+                nodes = [nodes[0], nodes[-1], nodes[1]]
+                self._add_connect_tangent(self.attr_objs[i], nodes[0], 'tangentIn', axis)
+                self._add_connect_tangent(self.attr_objs[i], nodes[2], 'tangentOut', axis)
+            driver_nodes.extend(nodes)
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         return driver_nodes
 
     def get_driver_positions(self):
@@ -146,7 +189,10 @@ class SplineSampler(Spline):
                  sample_params=None,
                  degree=3,
                  bezier=True,
+<<<<<<< HEAD
                  use_tangents=True,
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                  aim_axis='+x',
                  up_axis='+y',
                  offset_matrix=True,
@@ -155,8 +201,13 @@ class SplineSampler(Spline):
                  scale=True,
                  periodic=False,
                  add_to_tags=None,
+<<<<<<< HEAD
                  suffix='crv',
                  stretch=True,
+=======
+                 suffix='CRV',
+                 lock_stretch=True,
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                  length_attr=False
                  ):
         super(SplineSampler, self).__init__(name,
@@ -164,7 +215,10 @@ class SplineSampler(Spline):
                                             attr_objs=attr_objs,
                                             degree=degree,
                                             bezier=bezier,
+<<<<<<< HEAD
                                             use_tangents=use_tangents,
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                             aim_axis=aim_axis,
                                             periodic=periodic,
                                             add_to_tags=add_to_tags,
@@ -175,7 +229,10 @@ class SplineSampler(Spline):
         self.object_up = object_up
         self.offset_matrix = offset_matrix
         self.sample_params = sample_params
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         if not self.sample_params and self.driven:
             self.sample_params = lerp(0.001, .999, num=len(driven))
         self.sample_base_names = create_chain_names(len(self.sample_params), name=self.namer.name, add_to_tags='sample')
@@ -183,6 +240,7 @@ class SplineSampler(Spline):
         self.build_spline()
 
         self.motion_paths, self.sample_matrices = self._create_samples()
+<<<<<<< HEAD
         
         if stretch:
             if not length_attr:
@@ -190,6 +248,9 @@ class SplineSampler(Spline):
                 self.curve_info = nodes[0]
                 self.length_mult = nodes[1]
             self._stretch_setup()
+=======
+
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
         if driven:
             self._connect_driven()
         if twist:
@@ -245,6 +306,7 @@ class SplineSampler(Spline):
         up_node = transform.create_axis_nodes(self.object_up, axes=[self.up_axis], position=False, local=True)[0]
         for mpath in self.motion_paths:
             cmds.connectAttr(up_node + '.output', mpath + '.worldUpVector')
+<<<<<<< HEAD
     
     def _stretch_setup(self):
         # add proxy attributes to drivers
@@ -346,6 +408,34 @@ class SplineSampler(Spline):
             for i, driver in enumerate(self.drivers):
                 cmds.connectAttr(driver_point_mtxs[i] + '.output', remap + '.colorEntryList[{}].color'.format(i))
                 cmds.connectAttr(driver_nearest_nodes[i] + '.parameter', remap + '.colorEntryList[{}].position'.format(i))
+=======
+
+    def _twist_setup(self):
+        driver_nearest_nodes = []
+        rotate_axis = self.aim_axis[-1].upper()
+        for i, driver in enumerate(self.drivers):
+            nearest_node = common.create_node('nearestPointOnCurve', driver, add_to_tags='twist')
+            cmds.connectAttr(self.position_nodes[i] + '.outputTranslate', nearest_node + '.inPosition')
+            cmds.connectAttr(self.curve_shape + '.worldSpace[0]', nearest_node + '.inputCurve')
+            driver_nearest_nodes.append(nearest_node)
+        driven_nearest_nodes = []
+        for mpath in self.motion_paths:
+            remap = common.create_node('remapValue', mpath, add_to_tags='twist')
+            comp = common.create_node('composeMatrix', mpath, add_to_tags='twist')
+            nearest_node = common.create_node('nearestPointOnCurve', mpath, add_to_tags='twist')
+            point_mtx = common.create_node('pointMatrixMult', mpath, add_to_tags='twist')
+            cmds.connectAttr(remap + '.outValue', comp + '.inputRotate' + rotate_axis)
+            cmds.connectAttr(mpath + '.allCoordinates', nearest_node + '.inPosition')
+            cmds.connectAttr(self.curve_shape + '.worldSpace[0]', nearest_node + '.inputCurve')
+            cmds.connectAttr(nearest_node + '.parameter', remap + '.inputValue')
+            cmds.connectAttr(comp + '.outputMatrix', point_mtx + '.inMatrix')
+            cmds.setAttr(point_mtx + '.inPoint', *AXIS_STR_TO_MVEC[self.up_axis])
+            cmds.setAttr(point_mtx + '.vectorMultiply', True)
+            for i, driver in enumerate(self.drivers):
+                cmds.connectAttr(self.attr_objs[i] + '.rotate' + rotate_axis, remap + '.value[{}].value_FloatValue'.format(i))
+                cmds.connectAttr(driver_nearest_nodes[i] + '.parameter', remap + '.value[{}].value_Position'.format(i))
+            cmds.connectAttr(point_mtx + '.output', mpath + '.worldUpVector')
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
             driven_nearest_nodes.append(nearest_node)
 
 
@@ -358,8 +448,14 @@ def add_length_attribute(crv, attr_objs):
     cmds.connectAttr(curve_info + '.arcLength', mult + '.input1')
     cmds.setAttr(mult + '.input2', 1/curve.get_length(curve_shape))
     for obj in attr_objs:
+<<<<<<< HEAD
         if not cmds.attributeQuery('length', node=obj, exists=True):
             attribute.add_attribute(obj, 'length', keyable=False)
         cmds.connectAttr(mult + '.output', obj + '.length')
         
     return [curve_info, mult]
+=======
+        attribute.add_attribute(obj, 'length', keyable=False)
+        cmds.connectAttr(mult + '.output', obj + '.length')
+    return curve_info
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad

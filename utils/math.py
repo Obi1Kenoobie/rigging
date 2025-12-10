@@ -1,8 +1,11 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 from rigging.utils.data_io import Data
+<<<<<<< HEAD
 from rigging.utils.globals import AXIS_ATTR, AXIS_VEC, AXIS_STR
 
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
 
 ROTATION_ORDER = {'xyz' : om.MEulerRotation.kXYZ,
@@ -126,6 +129,7 @@ def get_axis_vector(matrix, axis):
     return vec
 
 
+<<<<<<< HEAD
 def get_closest_axis_to_vector(aimer_matrix, target_matrix):
     """Get closest axis aligning to the target aim vector
     
@@ -152,6 +156,8 @@ def get_closest_axis_to_vector(aimer_matrix, target_matrix):
     return AXIS_VEC[axis_index], AXIS_STR[axis_index]
 
 
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 def _reorder_aim_axis(aim_vec, up_vec, tangent_vec, aim_axis, up_axis):
     """Reorder rows of a matrix to fit the aim_axis and up_axis criteria
 
@@ -383,6 +389,7 @@ def get_position_vector(dag_node, world=True):
     return translation_from_matrix(matrix)
 
 
+<<<<<<< HEAD
 def get_vector_between(start_matrix, end_matrix):
     return translation_from_matrix(end_matrix) - translation_from_matrix(start_matrix)
 
@@ -391,6 +398,8 @@ def get_vector_between_dags(start_dag, end_dag):
     return get_vector_between(get_matrix(end_dag), get_matrix(start_dag))
 
 
+=======
+>>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 def rotate_position(position, aim_axis, up_axis):
     """Reorder a position vector to fit the aim_axis and up_axis criteria
 
