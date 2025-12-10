@@ -3,11 +3,7 @@ import maya.api.OpenMaya as om
 
 from rigging.modules.module import RigModule
 
-<<<<<<< HEAD
 from rigging.parts.control import Control, ControlChain
-=======
-from rigging.parts.control import Control
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
 from rigging.utils import math
 from rigging.utils.connect import matrix_constraint
@@ -91,7 +87,6 @@ class Generic(RigModule):
 
         matrix_constraint(self.inputs['input'], ctrl.top, store=True)
         
-<<<<<<< HEAD
         self.module_ctrls.append(ctrl.ctrl)
 
 
@@ -177,6 +172,3 @@ class GenericChain(RigModule):
         matrix_constraint(self.inputs['input'], ctrls.top, store=True)
         
         self.module_ctrls.extend(ctrls.ctrls)
-=======
-        self.module_ctrls.append(ctrl.ctrl)
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad

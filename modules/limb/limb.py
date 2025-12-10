@@ -1,11 +1,8 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
-<<<<<<< HEAD
 from math import degrees
 
-=======
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 from rigging.modules.module import RigModule
 
 from rigging.parts.base import Base
@@ -15,11 +12,8 @@ from rigging.parts.ik import IK
 
 from rigging.utils import math
 from rigging.utils.connect import matrix_constraint, constraint
-<<<<<<< HEAD
 from rigging.utils.globals import AXIS_STR_TO_VEC, AXIS_NORM
 from rigging.utils.common import create_node
-=======
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
 
 
 
@@ -206,7 +200,6 @@ class Limb(RigModule):
             # FK driver constraint
             matrix_constraint(fk_drivers[i], limb_ikfk.driverA.objs[i])
         
-<<<<<<< HEAD
 
 class ZLimb(RigModule):
     def __init__(self, 
@@ -517,9 +510,3 @@ class ZLimb(RigModule):
         
         rotate_axis = AXIS_NORM[aim_axis][-1]
         cmds.connectAttr('{}.outValueX'.format(rng), '{}.r{}'.format(driven_obj.ofs, rotate_axis))
-=======
-        
-        
-        
-        
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad

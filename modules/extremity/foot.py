@@ -86,11 +86,7 @@ class Foot(RigModule):
                                ball_mtx,
                                parent=foot_fk_ctrl.bottom,
                                add_to_tags=['fk'],
-<<<<<<< HEAD
                                lock_r='',
-=======
-                               lock_r='xy',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                lock_t='xyz',
                                lock_s='xyz',
                                shape_up='+y', 
@@ -140,11 +136,7 @@ class Foot(RigModule):
                                 parent=footroll.ankle.bottom,
                                 add_to_tags=['roll'],
                                 syntax_list=syntax_list,
-<<<<<<< HEAD
                                 lock_r='',
-=======
-                                lock_r='xy',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                 lock_t='xyz',
                                 lock_s='xyz',
                                 shape_type='joint',
@@ -164,11 +156,7 @@ class Foot(RigModule):
                                parent=footroll.ball.bottom,
                                add_to_tags=['bk1'],
                                syntax_list=syntax_list,
-<<<<<<< HEAD
                                lock_r='',
-=======
-                               lock_r='xy',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                lock_t='xyz',
                                lock_s='xyz',
                                shape_type='cube',
@@ -183,11 +171,7 @@ class Foot(RigModule):
         heel_ctrl = Control('heel_{}'.format(self.side), 
                              math.get_matrix(footroll.heel.top),
                             parent=footroll.foot.top,
-<<<<<<< HEAD
                             lock_r='',
-=======
-                            lock_r='xy',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                             lock_t='xyz',
                             lock_s='xyz',
                             shape_type='joint',
@@ -208,11 +192,7 @@ class Foot(RigModule):
         tip_ctrl = Control('tip_{}'.format(self.side), 
                             math.get_matrix(footroll.tip.top),
                             parent=footroll.heel.bottom,
-<<<<<<< HEAD
                             lock_r='',
-=======
-                            lock_r='xy',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                             lock_t='xyz',
                             lock_s='xyz',
                             shape_type='joint',
@@ -232,11 +212,7 @@ class Foot(RigModule):
                                ball_ik_mtx,
                                parent=footroll.tip.bottom,
                                add_to_tags=['ik'],
-<<<<<<< HEAD
                                lock_r='',
-=======
-                               lock_r='yz',
->>>>>>> 4bf9ea710ed75cc743948e0f93b2d665fac484ad
                                lock_t='xyz',
                                lock_s='xyz',
                                size=6.0, 
