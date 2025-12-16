@@ -177,7 +177,7 @@ class SplineSampler(Spline):
         self.sample_params = sample_params
 
         if not self.sample_params and self.driven:
-            self.sample_params = lerp(0.001, .999, num=len(driven))
+            self.sample_params = lerp(0.0001, 0.9999, num=len(driven))
         self.sample_base_names = create_chain_names(len(self.sample_params), name=self.namer.name, add_to_tags='sample')
 
         self.build_spline()
@@ -201,13 +201,15 @@ class SplineSampler(Spline):
         motion_paths = []
         sample_matrices = []
         for i, obj in enumerate(self.sample_params):
+            # add sample param attribute to curve
+            attribute.add_attribute(self.curve_shape, f'sample{i:02d}', dv=self.sample_params[i])
             mpath = common.create_node('motionPath', self.sample_base_names[i], add_to_tags='percent')
-            cmds.setAttr(mpath + '.uValue', self.sample_params[i])
             cmds.setAttr(mpath + '.fractionMode', True)
             cmds.setAttr(mpath + '.worldUpVector', *AXIS_STR_TO_MVEC[self.up_axis])
             cmds.setAttr(mpath + '.frontAxis', AXIS_STR_TO_ATTR[self.aim_axis])
             cmds.setAttr(mpath + '.upAxis', AXIS_STR_TO_ATTR[self.up_axis])
             cmds.setAttr(mpath + '.worldUpType', 3)
+            cmds.connectAttr(self.curve_shape + f'.sample{i:02d}', mpath + '.uValue')
             cmds.connectAttr(self.curve_shape + '.worldSpace[0]', mpath + '.geometryPath')
             comp_mtx = common.create_node('composeMatrix', self.sample_base_names[i])
             cmds.connectAttr(mpath + '.allCoordinates', comp_mtx + '.inputTranslate')
@@ -218,28 +220,29 @@ class SplineSampler(Spline):
 
     def _connect_driven(self):
         for i, obj in enumerate(self.driven):
-            parent = common.get_parent(obj)
-            if parent:
-                mult_matrix = common.create_node('multMatrix', self.sample_matrices[i], add_to_tags='offset')
-                cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', mult_matrix + '.matrixIn[0]')
-                cmds.connectAttr(parent + '.worldInverseMatrix[0]', mult_matrix + '.matrixIn[1]')
-                if self.offset_matrix:
-                    cmds.connectAttr(mult_matrix + '.matrixSum', obj + '.offsetParentMatrix')
+            if obj:
+                parent = common.get_parent(obj)
+                if parent:
+                    mult_matrix = common.create_node('multMatrix', self.sample_matrices[i], add_to_tags='offset')
+                    cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', mult_matrix + '.matrixIn[0]')
+                    cmds.connectAttr(parent + '.worldInverseMatrix[0]', mult_matrix + '.matrixIn[1]')
+                    if self.offset_matrix:
+                        cmds.connectAttr(mult_matrix + '.matrixSum', obj + '.offsetParentMatrix')
+                    else:
+                        decomp = common.create_node('decomposeMatrix', obj)
+                        cmds.connectAttr(mult_matrix + '.matrixSum', decomp + '.inputMatrix')
+                        cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
+                        cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
+                        cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
                 else:
-                    decomp = common.create_node('decomposeMatrix', obj)
-                    cmds.connectAttr(mult_matrix + '.matrixSum', decomp + '.inputMatrix')
-                    cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
-                    cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
-                    cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
-            else:
-                if self.offset_matrix:
-                    cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', obj + '.offsetParentMatrix')
-                else:
-                    decomp = common.create_node('decomposeMatrix', obj)
-                    cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', decomp + '.inputMatrix')
-                    cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
-                    cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
-                    cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
+                    if self.offset_matrix:
+                        cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', obj + '.offsetParentMatrix')
+                    else:
+                        decomp = common.create_node('decomposeMatrix', obj)
+                        cmds.connectAttr(self.sample_matrices[i] + '.outputMatrix', decomp + '.inputMatrix')
+                        cmds.connectAttr(decomp + '.outputTranslate', obj + '.translate')
+                        cmds.connectAttr(decomp + '.outputRotate', obj + '.rotate')
+                        cmds.connectAttr(decomp + '.outputScale', obj + '.scale')
 
     def _connect_up_vector(self):
         up_node = transform.create_axis_nodes(self.object_up, axes=[self.up_axis], position=False, local=True)[0]
@@ -248,8 +251,22 @@ class SplineSampler(Spline):
     
     def _stretch_setup(self):
         # add proxy attributes to drivers
-        attribute.add_proxy_attribute(self.drivers, 'stretch', min=0.0, max=1.0, dv=0.0)
-        attribute.add_proxy_attribute(self.drivers, 'compress', min=0.0, max=1.0, dv=0.0)
+        attribute.add_proxy_attribute(self.drivers, 'stretch', min=0.0, max=1.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, 'compress', min=0.0, max=1.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, 'spline_scale', min=0.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, 'spline_offset', dv=0.0)
+        
+        # scaling spline offset based on arc length
+        lengthdiv = common.create_node('multiplyDivide', self.namer.name, add_to_tags=['length', 'rec'])
+        offset_mult = common.create_node('multDoubleLinear', self.namer.name, add_to_tags=['spline', 'offset'])
+        
+        cmds.setAttr(lengthdiv + '.operation', 2)
+        cmds.setAttr(lengthdiv + '.input1X', 1.0)
+        
+        cmds.connectAttr(self.curve_info + '.arcLength', lengthdiv + '.input2X')
+        
+        cmds.connectAttr(self.drivers[0] + '.spline_offset', offset_mult + '.input1')
+        cmds.connectAttr(lengthdiv + '.outputX', offset_mult + '.input2')
         
         # attribute blending setup
         multdiv = common.create_node('multiplyDivide', self.namer.name, add_to_tags=['length', 'factor'])
@@ -282,7 +299,13 @@ class SplineSampler(Spline):
         # setting up stretch compress for each sample
         for i, mpath in enumerate(self.motion_paths):
             base_name = self.sample_base_names[i]
-
+            
+            scale_mult = common.create_node('multDoubleLinear', base_name, add_to_tags=['spline', 'scale'])
+            offset_add = common.create_node('addDoubleLinear', base_name, add_to_tags=['spline', 'offset'])
+            offset_neg = common.create_node('addDoubleLinear', base_name, add_to_tags=['spline', 'offset', 'neg'])
+            offset_comp = common.create_node('composeMatrix', base_name, add_to_tags=['spline', 'offset'])
+            offset_mmtx = common.create_node('multMatrix', base_name, add_to_tags=['spline', 'offset'])
+            offset_cond = common.create_node('condition', base_name, add_to_tags=['spline', 'offset'])
             factor_mult = common.create_node('multDoubleLinear', base_name, add_to_tags=['length', 'factor'])
             compress_cond = common.create_node('condition', base_name, add_to_tags=['compress'])
             compress_add = common.create_node('addDoubleLinear', base_name, add_to_tags=['compress'])
@@ -293,8 +316,6 @@ class SplineSampler(Spline):
 
             sample_blends.append(compress_blmtx)
             
-            cmds.setAttr(factor_mult + '.input1', self.sample_params[i])
-            
             cmds.setAttr(compress_cond + '.operation', 2)
             cmds.setAttr(compress_cond + '.secondTerm', 1.0)
             cmds.setAttr(compress_cond + '.colorIfTrueR', 1.0)
@@ -302,10 +323,33 @@ class SplineSampler(Spline):
             
             cmds.setAttr(compress_add + '.input2', -1.0)
             
+            cmds.setAttr(offset_cond + '.operation', 4)
+            cmds.setAttr(offset_cond + '.colorIfTrueR', 1.0)
+            cmds.setAttr(offset_cond + '.colorIfFalseR', 0.0)
+            
+            cmds.connectAttr(self.curve_shape + f'.sample{i:02d}', scale_mult + '.input1')
+            cmds.connectAttr(self.drivers[0] + '.spline_scale', scale_mult + '.input2')
+            
+            cmds.connectAttr(factor_mult + '.output', offset_add + '.input1')
+            cmds.connectAttr(offset_mult + '.output', offset_add + '.input2')
+
+            cmds.connectAttr(offset_add + '.output', mpath + '.uValue', f=True)
+            cmds.connectAttr(offset_add + '.output', compress_add + '.input1')
+            cmds.connectAttr(offset_add + '.output', compress_cond + '.firstTerm')
+            
+            cmds.connectAttr(compress_mult + '.output', offset_neg + '.input1')
+            cmds.connectAttr(self.curve_info + '.arcLength', offset_neg + '.input2')
+            cmds.connectAttr(offset_neg + '.output', offset_comp + '.inputTranslate{}'.format(self.aim_axis[-1].upper()))
+            
+            cmds.connectAttr(offset_comp + '.outputMatrix', offset_mmtx + '.matrixIn[0]')
+            cmds.connectAttr(self.drivers[0] + '.worldMatrix[0]', offset_mmtx + '.matrixIn[1]')
+            cmds.connectAttr(offset_mmtx + '.matrixSum', compress_blmtx + '.target[1].targetMatrix')
+            
+            cmds.connectAttr(offset_add + '.output', offset_cond + '.firstTerm')
+            cmds.connectAttr(offset_cond + '.outColorR', compress_blmtx + '.target[1].weight')
+            
+            cmds.connectAttr(scale_mult + '.output', factor_mult + '.input1')
             cmds.connectAttr(length_cond + '.outColorR', factor_mult + '.input2')
-            cmds.connectAttr(factor_mult + '.output', mpath + '.uValue')
-            cmds.connectAttr(factor_mult + '.output', compress_add + '.input1')
-            cmds.connectAttr(factor_mult + '.output', compress_cond + '.firstTerm')
             
             cmds.connectAttr(compress_add + '.output', compress_mult + '.input1')
             cmds.connectAttr(self.curve_info + '.arcLength', compress_mult + '.input2')
