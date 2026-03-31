@@ -440,8 +440,7 @@ class ZLimb(RigModule):
                       add_to_tags='ik_footroll',
                       parent=self.hierarchy['ik'],
                       handle_parent=footroll_ik_srt.obj,
-                      pole_vector=pv_ctrl.ctrl,
-                      solver='ikRPsolver',
+                      solver='ikSCsolver',
                       joint_display='none')
         
         self.footroll_output = footroll_ik_chain.bottom

@@ -65,7 +65,7 @@ def matrix_constraint(driver, driven, snap=False, attr='srt', store=False):
                            conn_dict)
 
 
-def aim_matrix_constraint(aim_obj, dag_node, up_obj=None, aim='+x', up='+y', use_up_obj=False, snap=True, store=False):
+def aim_matrix_constraint(aim_obj, dag_node, up_obj=None, aim='+x', up='+y', skip_rotate='', use_up_obj=False, snap=True, store=False):
     conn_dict['type'] = 'aim_matrix_constraint'
     conn_dict['attributes'] = [dag_node, aim_obj, up_obj, aim, up, use_up_obj, snap, store]
     aim_vec = AXIS_STR_TO_VEC[aim]
@@ -74,9 +74,15 @@ def aim_matrix_constraint(aim_obj, dag_node, up_obj=None, aim='+x', up='+y', use
     decomp = common.create_node('decomposeMatrix', aim_obj, add_to_tags=['aim', 'cnst'])
     mult = common.create_node('multMatrix', aim_obj, add_to_tags=['aim', 'cnst'])
     conn_dict['nodes'] = [aim_node, decomp, mult]
-
+    
+    skip = [i for i in skip_rotate]
+    
     cmds.setAttr(aim_node + '.secondaryMode', 1)
-    cmds.connectAttr(decomp + '.outputRotate', dag_node + '.rotate')
+    
+    for axis in ['x', 'y', 'z']:
+        if not axis in skip:
+            cmds.connectAttr(decomp + '.outputRotate{}'.format(axis.upper()), dag_node + '.r{}'.format(axis))
+
     cmds.connectAttr(dag_node + '.parentMatrix', aim_node + '.inputMatrix')
     cmds.connectAttr(aim_obj + '.worldMatrix[0]', aim_node + '.primaryTargetMatrix')
     cmds.setAttr(aim_node + '.primaryInputAxis', *aim_vec, type='double3')
@@ -102,6 +108,8 @@ def aim_matrix_constraint(aim_obj, dag_node, up_obj=None, aim='+x', up='+y', use
     cmds.connectAttr(mult + '.matrixSum', decomp + '.inputMatrix')
     if store:
         set_attribute_dict(conn_dict['attributes'][0], '{}_cnst'.format(conn_dict['type']), conn_dict)
+    
+    return aim_node
 
 def sdk(driver_attr, driver_values, driven_attr, driven_values, interpolation='linear', store=False):
     if driver_values and driven_values and len(driver_values) == len(driven_values):

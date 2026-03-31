@@ -75,6 +75,8 @@ class Spline(object):
         self._connect_drivers(self.driver_nodes, self.curve_shape)
 
         if self.length_attr:
+            for obj in self.attr_objs:
+                attribute.add_header_attribute(obj, f'{self.namer.name}_ATTRIBUTES'.upper())
             nodes = add_length_attribute(self.curve, self.attr_objs)
             self.curve_info = nodes[0]
             self.length_mult = nodes[1]
@@ -159,6 +161,10 @@ class SplineSampler(Spline):
                  stretch=True,
                  length_attr=False
                  ):
+                    
+        if stretch and not length_attr:
+            length_attr = True
+
         super(SplineSampler, self).__init__(name,
                                             drivers=drivers,
                                             attr_objs=attr_objs,
@@ -185,10 +191,6 @@ class SplineSampler(Spline):
         self.motion_paths, self.sample_matrices = self._create_samples()
         
         if stretch:
-            if not length_attr:
-                nodes = add_length_attribute(self.curve, self.drivers)
-                self.curve_info = nodes[0]
-                self.length_mult = nodes[1]
             self._stretch_setup()
         if driven:
             self._connect_driven()
@@ -251,10 +253,14 @@ class SplineSampler(Spline):
     
     def _stretch_setup(self):
         # add proxy attributes to drivers
-        attribute.add_proxy_attribute(self.drivers, 'stretch', min=0.0, max=1.0, dv=1.0)
-        attribute.add_proxy_attribute(self.drivers, 'compress', min=0.0, max=1.0, dv=1.0)
-        attribute.add_proxy_attribute(self.drivers, 'spline_scale', min=0.0, dv=1.0)
-        attribute.add_proxy_attribute(self.drivers, 'spline_offset', dv=0.0)
+        stretch_attr = f'{self.namer.name}_stretch'
+        compress_attr = f'{self.namer.name}_compress'
+        spline_scale_attr = f'{self.namer.name}_spline_scale'
+        spline_offset_attr = f'{self.namer.name}_spline_offset'
+        attribute.add_proxy_attribute(self.drivers, stretch_attr, min=0.0, max=1.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, compress_attr, min=0.0, max=1.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, spline_scale_attr, min=0.0, dv=1.0)
+        attribute.add_proxy_attribute(self.drivers, spline_offset_attr, dv=0.0)
         
         # scaling spline offset based on arc length
         lengthdiv = common.create_node('multiplyDivide', self.namer.name, add_to_tags=['length', 'rec'])
@@ -265,7 +271,7 @@ class SplineSampler(Spline):
         
         cmds.connectAttr(self.curve_info + '.arcLength', lengthdiv + '.input2X')
         
-        cmds.connectAttr(self.drivers[0] + '.spline_offset', offset_mult + '.input1')
+        cmds.connectAttr(self.drivers[0] + f'.{spline_offset_attr}', offset_mult + '.input1')
         cmds.connectAttr(lengthdiv + '.outputX', offset_mult + '.input2')
         
         # attribute blending setup
@@ -288,8 +294,8 @@ class SplineSampler(Spline):
         cmds.connectAttr(multdiv + '.outputX', compress_blend + '.input[0]')
         cmds.connectAttr(multdiv + '.outputX', stretch_blend + '.input[0]')
         
-        cmds.connectAttr(self.drivers[0] + '.compress', compress_blend + '.attributesBlender')
-        cmds.connectAttr(self.drivers[0] + '.stretch', stretch_blend + '.attributesBlender')
+        cmds.connectAttr(self.drivers[0] + f'.{compress_attr}', compress_blend + '.attributesBlender')
+        cmds.connectAttr(self.drivers[0] + f'.{stretch_attr}', stretch_blend + '.attributesBlender')
         
         cmds.connectAttr(self.length_mult + '.output', length_cond + '.firstTerm')
         cmds.connectAttr(compress_blend + '.output', length_cond + '.colorIfFalseR')
@@ -328,7 +334,7 @@ class SplineSampler(Spline):
             cmds.setAttr(offset_cond + '.colorIfFalseR', 0.0)
             
             cmds.connectAttr(self.curve_shape + f'.sample{i:02d}', scale_mult + '.input1')
-            cmds.connectAttr(self.drivers[0] + '.spline_scale', scale_mult + '.input2')
+            cmds.connectAttr(self.drivers[0] + f'.{spline_scale_attr}', scale_mult + '.input2')
             
             cmds.connectAttr(factor_mult + '.output', offset_add + '.input1')
             cmds.connectAttr(offset_mult + '.output', offset_add + '.input2')
@@ -394,6 +400,7 @@ class SplineSampler(Spline):
 
 
 def add_length_attribute(crv, attr_objs):
+    base_name = Name(crv).get_basename(namespace=False)
     curve_shape = common.get_shape(crv)
     curve_info = common.create_node('curveInfo', crv, add_to_tags='length')
     mult = common.create_node('multDoubleLinear', crv, add_to_tags='length')
@@ -403,7 +410,7 @@ def add_length_attribute(crv, attr_objs):
     cmds.setAttr(mult + '.input2', 1/curve.get_length(curve_shape))
     for obj in attr_objs:
         if not cmds.attributeQuery('length', node=obj, exists=True):
-            attribute.add_attribute(obj, 'length', keyable=False)
-        cmds.connectAttr(mult + '.output', obj + '.length')
+            attribute.add_attribute(obj, f'{base_name}_length', keyable=False)
+        cmds.connectAttr(mult + '.output', obj + f'.{base_name}_length')
         
     return [curve_info, mult]

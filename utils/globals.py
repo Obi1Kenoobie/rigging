@@ -114,6 +114,8 @@ COLOR_INDEX_TO_STR = dict(zip(COLOR_STR, COLOR_INDEX))
 
 OVERRIDE_TYPES = ['transform', 'mesh', 'nurbsCurve', 'nurbsSurface']
 
+ROTATION_ORDER = ['xyz', 'yzx', 'zxy', 'xzy', 'yxz', 'zyx']
+
 # axis vectors
 AXIS_STR = ['+x', '-x', '+y', '-y', '+z', '-z']
 AXIS_LONG = ['px', 'nx', 'py', 'ny', 'pz', 'nz']
